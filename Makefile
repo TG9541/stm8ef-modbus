@@ -24,7 +24,7 @@ flash: depend
 	stm8flash -c stlinkv2 -p stm8s103f3 -w out/$(STM8EF_BOARD)/$(STM8EF_BOARD).ihx
 
 load: depend
-	tools/codeload.py -b $(STM8EF_BOARD) -p /dev/$(TERM_PORT) serial main.fs
+	tools/codeload.py -b out/$(STM8EF_BOARD) -p /dev/$(TERM_PORT) serial main.fs
 
 simload: depend
 	tools/simload.sh $(STM8EF_BOARD)

@@ -41,10 +41,6 @@ NVM
     [ HERE ( xt ) ] 
   ;
 
-  HERE SWAP DUP , 
-
-hier weiter
-
   \ make FC-XT Table for FC>XT, initialize with "Invalid FC"
   HERE ( [ tab ] ) ' FCINV ( [ a1 a2 ] ) 
     DUP , DUP , DUP , DUP , DUP , DUP , DUP , DUP ,

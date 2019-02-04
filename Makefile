@@ -3,6 +3,15 @@ STM8EF_VER=2.2.23.pre2
 STM8EF_BIN=stm8ef-bin.zip
 STM8EF_URL=https://github.com/TG9541/stm8ef/releases/download/${STM8EF_VER}/${STM8EF_BIN}
 
+E4THCOM=e4thcom-0.6.3
+TERM_PORT=ttyUSB0
+TERM_BAUD=9600
+TERM_FLAGS=
+
+# Usage:make term BOARD=<board dir> [TERM_PORT=ttyXXXX] [TERM_BAUD=nnnn] [TERM_FLAGS="--half-duplex --idm"]
+term:
+	$(E4THCOM) -t stm8ef -p .:lib $(TERM_FLAGS) -d $(TERM_PORT) -b B$(TERM_BAUD)
+
 all: flash
 
 zip:

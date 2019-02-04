@@ -1,0 +1,24 @@
+\ STM8 eForth bus control stubs for RS485 - MODBUS
+
+\res MCU: STM8S103
+\res export PB_ODR PB_DDR
+
+#require ]B!
+
+NVM
+  \ Set RS485 Driver to "RX"
+  : BUSrx ( -- )
+    [ 0 PB_ODR 5 ]B!
+  ;
+
+  \ Set RS485 Driver to "TX"
+  : BUStx ( -- )
+    [ 1 PB_ODR 5 ]B!
+  ;
+
+  \ Initialize GPIO and RS485 Driver
+  : BUSCTRL ( -- )
+    BUSrx
+    [ 1 PB_DDR 5 ]B!
+  ;
+RAM

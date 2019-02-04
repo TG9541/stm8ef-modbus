@@ -1,0 +1,170 @@
+#require MBPROTO
+
+#require ALIAS
+#require 'IDLE
+#require :NVM
+#require WIPE
+
+2 CONSTANT BAUD9600
+
+4 CONSTANT COILBYTES
+2 CONSTANT INPUTCELLS
+2 CONSTANT HOLDINGCELLS
+
+NVM
+
+  \ address Big Endien to Little Endien
+  : B>L ( aBE -- aLE )
+    1 XOR
+  ;
+
+  \ --- FC01 "Read Coils"
+
+  VARIABLE coils COILBYTES 2- ALLOT
+
+  \ FC01 coils iterated transfer
+  :NVM  ( i -- 8 )
+    8 / coils + B>L C@ txc+   8 ( inc )
+  ;NVM ( xt )
+
+  \ FC01 handler
+  :NVM  ( -- )
+    [ ( xt1 xt2 ) SWAP ] LITERAL 1 ( xt bpu ) mbread
+  ;NVM ( xt ) 1 FC>XT !
+
+
+  \ --- FC02 "Read Discrete Inputs"
+
+  VARIABLE inputs INPUTCELLS 1- 2* ALLOT
+
+  \ FC02 input register iterated transfer
+  :NVM  ( i -- 8 )
+    8 / inputs + B>L C@ txc+   8 ( inc )
+  ;NVM ( xt )
+
+  \ FC02 handler
+  :NVM  ( -- )
+     [ ( xt1 xt2 ) SWAP ] LITERAL 1 ( xt bpu ) mbread
+  ;NVM ( xt ) 2 FC>XT !
+
+
+  \ --- FC03 "Read Holding Registers"
+
+  VARIABLE holding HOLDINGCELLS 1- 2* ALLOT
+
+  \ FC03 holding register iterated transfer
+  :NVM  ( i -- 1 )
+    2* holding + @ tx+   1 ( inc )
+  ;NVM ( xt )
+
+  \ FC03 handler
+  :NVM  ( -- )
+     [ ( xt1 xt2 ) SWAP ] LITERAL 16 ( xt bpu ) mbread
+  ;NVM ( xt ) 3 FC>XT !
+
+
+  \ --- FC04 "Read Input Registers"
+
+  \ FC04 input register iterated transfer
+  :NVM  ( i -- 1 )
+    2* inputs + @ tx+   1 ( inc )
+  ;NVM ( xt )
+
+  \ FC04 handler
+  :NVM  ( -- )
+     [ ( xt1 xt2 ) SWAP ] LITERAL 16 ( xt bpu ) mbread
+  ;NVM ( xt ) 4 FC>XT !
+
+
+  \ MB 2 x 16 bit response
+  :NVM  ( -- )
+    mbp1 tx+ mbp2 tx+
+  ;RAM ALIAS txp12+ NVM
+
+
+  \ --- FC05 handler "Write Single Coil"
+
+  :NVM   ( -- )
+    mbp1 1- ( #b) DUP 0 8 WITHIN IF
+      mbp2 $FF00 =
+      ( #b f ) coils B>L
+      ( #b f a ) ROT ( f a #b ) B!
+      txp12+
+    ELSE
+      DROP   2 MBEC
+    THEN
+  ;NVM 5 FC>XT !
+
+
+  \ MB read rxbuf payload data
+  :NVM  ( i -- i a )
+    DUP rxbuf + 7 +
+  ;RAM ALIAS mbrxd
+
+
+  \ MB range test 
+  :NVM  ( u -- f )
+    mbp1 mbp2 + SWAP <
+  ;RAM ALIAS mbprange? NVM
+
+
+  \ --- FC15 "Write Multiple Coils"
+
+  \ FC15 Write Multiple Coils write transfer
+  :NVM  ( i -- 1 )
+    ( i ) mbrxd C@ SWAP ( n i )
+    coils + B>L C!   1 ( inc )
+  ;NVM ( xt )
+
+  \ FC15 handler
+  :NVM  ( -- )
+    COILBYTES mbprange? IF
+      [ ( xt1 xt2 ) SWAP ] LITERAL  ( xt ) mbloop
+      txp12+
+    ElSE
+      2 MBEC
+    THEN
+  ;NVM ( xt ) 15 FC>XT !
+
+
+  \ --- FC16 "Write Multiple Register"
+
+  \ FC16 holding register write transfer
+  :NVM  ( i -- 1 )
+    ( i ) 2* mbrxd @ SWAP ( n 2i )
+    holding + !   1 ( inc )
+  ;NVM ( xt )
+
+  \ FC16 handler
+  :NVM  ( -- )
+    HOLDINGCELLS mbprange? IF
+      [ ( xt1 xt2 ) SWAP ] LITERAL  ( xt ) mbloop
+      txp12+
+    ElSE
+      2 MBEC
+    THEN
+  ;NVM ( xt ) 16 FC>XT !
+
+
+  \ --- MODBUS server startup
+
+
+  \ show contents the RX and TX buffers
+  : bufdump ( -- )
+    CR ."  rxbuf:"
+    rxbuf rxp @ OVER - DUP . DUMP
+    CR ."  txbuf:"
+    txbuf tbp @ OVER - DUP . DUMP
+    
+    MBPROTO
+  ;
+  
+  : init ( -- )
+    BAUD9600 UARTISR
+    0 coils !
+    [ ' bufdump ] LITERAL 'IDLE !
+    \ [ ' MBPROTO ] LITERAL 'IDLE !
+  ;
+
+  ' init    'BOOT !
+WIPE RAM

@@ -72,7 +72,7 @@ NVM
     IF
       rxp @ 2- ( a1 ) DUP rxbuf ( a1 a1 a0 )
       MBCRC ( a1 crc-le ) SWAP @ =
-      ( crc-ok ) AND IF
+      ( crc-ok ) IF
         rxbuf    C@  ( DUP  ." S: " . CR )     txc+
         rxbuf 1+ C@  DUP txc+  ( fc )
         DUP 1 17 WITHIN IF

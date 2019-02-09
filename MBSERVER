@@ -5,8 +5,6 @@
 #require :NVM
 #require WIPE
 
-2 CONSTANT BAUD9600
-
 4 CONSTANT COILBYTES
 2 CONSTANT INPUTCELLS
 2 CONSTANT HOLDINGCELLS
@@ -148,23 +146,9 @@ NVM
 
   \ --- MODBUS server startup
 
-
-  \ show contents the RX and TX buffers
-  : bufdump ( -- )
-    CR ."  rxbuf:"
-    rxbuf rxp @ OVER - DUP . DUMP
-    CR ."  txbuf:"
-    txbuf tbp @ OVER - DUP . DUMP
-    
-    MBPROTO
-  ;
-  
-  : init ( -- )
-    BAUD9600 UARTISR
+  : MBSERVER ( -- )
     0 coils !
-    [ ' bufdump ] LITERAL 'IDLE !
-    \ [ ' MBPROTO ] LITERAL 'IDLE !
+    [ ' MBPROTO ] LITERAL 'IDLE !
   ;
 
-  ' init    'BOOT !
 WIPE RAM

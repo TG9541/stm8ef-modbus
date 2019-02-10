@@ -9,6 +9,7 @@ NVM
 
   : init ( -- )
     BAUD9600 UARTISR
+    1 mbnode !
     MBSERVER
   ;
 

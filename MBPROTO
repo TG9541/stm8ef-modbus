@@ -4,6 +4,7 @@
 #require WIPE
 
 NVM
+  VARIABLE mbnode
   VARIABLE crcerr
 
   \ get MODBUS FC
@@ -71,7 +72,8 @@ NVM
     1 TIM tstamp @ - <   AND ( message trigger )
     IF
       rxp @ 2- ( a1 ) DUP rxbuf ( a1 a1 a0 )
-      MBCRC ( a1 crc-le ) SWAP @ =
+      MBCRC ( a1 crc-le ) SWAP @ = ( crc OK )
+      mbnode @ rxbuf C@ = AND   ( node address match )
       ( crc-ok ) IF
         rxbuf    C@  ( DUP  ." S: " . CR )     txc+
         rxbuf 1+ C@  DUP txc+  ( fc )

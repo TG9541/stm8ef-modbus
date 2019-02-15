@@ -39,11 +39,11 @@ NVM
   \ default FC handler - raise EC 1 "ILLEGAL FUNCTION"
   : FCINV ( -- )
     1 MBEC
-    [ HERE ( xt ) ] 
+    [ HERE ( xt ) ]
   ;
 
   \ make FC-XT Table for FC>XT, initialize with "Invalid FC"
-  HERE ( [ tab ] ) ' FCINV ( [ a1 a2 ] ) 
+  HERE ( [ tab ] ) ' FCINV ( [ a1 a2 ] )
     DUP , DUP , DUP , DUP , DUP , DUP , DUP , DUP ,
     DUP , DUP , DUP , DUP , DUP , DUP , DUP ,     ,
 
@@ -73,16 +73,17 @@ NVM
     IF
       rxp @ 2- ( a1 ) DUP rxbuf ( a1 a1 a0 )
       MBCRC ( a1 crc-le ) SWAP @ = ( crc OK )
-      mbnode @ rxbuf C@ = AND   ( node address match )
       ( crc-ok ) IF
-        rxbuf    C@  ( DUP  ." S: " . CR )     txc+
-        rxbuf 1+ C@  DUP txc+  ( fc )
-        DUP 1 17 WITHIN IF
-           FC>XT @ EXECUTE
-        ELSE
-          FCINV
+        mbnode @ rxbuf C@ = ( node address match ) IF
+          rxbuf    C@  ( DUP  ." S: " . CR )     txc+
+          rxbuf 1+ C@  DUP txc+  ( fc )
+          DUP 1 17 WITHIN IF
+             FC>XT @ EXECUTE
+          ELSE
+            FCINV
+          THEN
+          tbp @ txbuf ( a1 a0 ) MBCRC ( CRC-LE ) tx+
         THEN
-        tbp @ txbuf ( a1 a0 ) MBCRC ( CRC-LE ) tx+
       ELSE
         1 crcerr +!
       THEN

@@ -8,6 +8,12 @@ TERM_PORT=ttyUSB0
 TERM_BAUD=9600
 TERM_FLAGS=
 
+# e4thcom style Forth code can't have a file suffix (but filenames are uppercase)
+mmforth:=$(shell echo `ls|gawk '/^[A-Z0-9]*$$/ {print}'`)
+forth=$(wildcard *fs) $(mmforth)
+
+.PHONY: test clean
+
 # Usage:make term BOARD=<board dir> [TERM_PORT=ttyXXXX] [TERM_BAUD=nnnn] [TERM_FLAGS="--half-duplex --idm"]
 term:
 	$(E4THCOM) -t stm8ef -p .:lib $(TERM_FLAGS) -d $(TERM_PORT) -b B$(TERM_BAUD)
@@ -26,8 +32,12 @@ flash: depend
 load: depend
 	tools/codeload.py -b out/$(STM8EF_BOARD) -p /dev/$(TERM_PORT) serial main.fs
 
-simload: depend
+simload: $(forth) depend
 	tools/simload.sh $(STM8EF_BOARD)
+	touch simload
+
+test: simload
+	test/mbtest.sh $(STM8EF_BOARD)
 
 target: depend
 	rm -f target
@@ -40,6 +50,7 @@ depend:
 		unzip -q -o ${STM8EF_BIN} out/${STM8EF_BOARD}/*; \
 		rm ${STM8EF_BIN}; \
 	fi
+	touch depend
 
 clean:
-	rm -rf target STM8S103.efr STM8S105.efr docs lib mcu out tools
+	rm -rf target STM8S103.efr STM8S105.efr simload depend docs lib mcu out tools

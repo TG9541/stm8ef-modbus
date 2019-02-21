@@ -83,11 +83,11 @@ NVM
             FCINV
           THEN
           tbp @ txbuf ( a1 a0 ) MBCRC ( CRC-LE ) tx+
+          send rxres
         THEN
       ELSE
         1 crcerr +!
       THEN
-      send rxres
     THEN
   ;
 

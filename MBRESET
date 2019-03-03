@@ -1,0 +1,12 @@
+\ STM8 eForth reset default handler
+#require ULOCKF
+#require LOCKF
+
+: MBRESET ( -- )
+  ULOCKF
+  [ ' FCDEF ] LITERAL 15 FOR
+    DUP I 1+ FC>XT !
+  NEXT
+  LOCKF
+;
+

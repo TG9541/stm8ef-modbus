@@ -42,13 +42,13 @@ Please refer to the [Installation Instructions](https://github.com/TG9541/stm8ef
 
 ## Console
 
-Since the MODBUS server uses the UART, the CLI uses a STM8 eForth "stock binary" with half-duplex communication through the `PD1/SWIM` GPIO pin. Other CLI communication options, e.g. comminication through split RxD-TxD lines, is possible by using a custom STM8 eForth binary.
+While MODBUS communication uses the STM8S UART, the Forth console communicates through a half-duplex simulated RS232 interface through the `PD1/SWIM` GPIO pin (and a diode). This is made possible by the SWIMCOM STM8 eForth "stock binary" which the makefile pulls from the STM8 eForth Releases. Other CLI communication options, e.g. using simulated full-duplex RxD-TxD lines, require building a custom STM8 eForth binary.
 
-Please refor to the [STM8 eForth Wiki](https://github.com/TG9541/stm8ef/wiki/STM8S-Value-Line-Gadgets#other-target-boards) to learn more about communication options and preferred terminal programs.
+Please refer to the [STM8 eForth Wiki](https://github.com/TG9541/stm8ef/wiki/STM8S-Value-Line-Gadgets#other-target-boards) to learn more about half-duplex CLI communication options and preferred terminal programs.
 
 ## Architecture
 
-The architecture is "layered" and very simple:
+The software architecture separates hardware abstraction and application in simple layers:
 
 Layer|Source file|Description
 -|-|-
@@ -63,7 +63,6 @@ The code is organized in the following execution domains:
 * interrupt service routine for buffered communication
 * foreground "idle mode" protocol handler
 * fixed-cadence background teask for I/O logic
-* foreground CLI provided by SWIMCOM STM8 eForth
+* foreground CLI provided by the SWIMCOM STM8 eForth
 
 Concerns are nicely separeted - it's even possible to change FC handlers without restarting the application!
-

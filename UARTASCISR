@@ -1,8 +1,3 @@
-\ STM8 eForth buffered UART ISR handler
-\ baud rate initialization for UARTISR:
-\ 0: 2400, 1:4800, 2:9600, 3:19200, 4:57600, 5:115200, 6:230400
- 
-
 #require WIPE
 
 NVM
@@ -38,11 +33,16 @@ RAM WIPE
 
 NVM
 
+  VARIABLE mbasc
+  
   \ Start UART TX ISR chain
 
+
+
   : send ( -- )
-    BUStx                  \ enable TX driver
+    BUStx                    \ enable TX driver
     txbuf txp !              \ next char: buffer start
+    mbasc C@ IF $3A ( ":" ) mbasc 1+ C! THEN  
     [ 1 UART1_CR2 #TIEN ]B!  \ start ISR chain (TXE is active)
   ;
 
@@ -76,7 +76,23 @@ NVM
   \ headerless: test for enough free space in txbuf for putting n bytes
   :NVM  ( n -- f )
     tbp @ txbuf - + 1- TXLEN <
-  ;RAM ALIAS test-tbp NVM
+  ;RAM ALIAS test-tbp
+
+NVM
+
+  \ add c to TX buffer
+  : txc+ ( c -- )
+    1 test-tbp IF
+      tbp @ C! 1 tbp +!
+    THEN
+  ;
+
+  \ add n to TX buffer
+  : tx+ ( n -- )
+    2 test-tbp IF
+      tbp @ ! 2 tbp +!
+    THEN
+  ;
 
   \ RX ISR handler
   :NVM
@@ -98,20 +114,6 @@ NVM
     [ 1 UART1_CR2 #RIEN ]B!
   ;
 
-  \ add c to TX buffer
-  : txc+ ( c -- )
-    1 test-tbp IF
-      tbp @ C! 1 tbp +!
-    THEN
-  ;
-
-  \ add n to TX buffer
-  : tx+ ( n -- )
-    2 test-tbp IF
-      tbp @ ! 2 tbp +!
-    THEN
-  ;
-
 WIPE RAM
 
 \res export UART1_CR2 UART1_BRR1
@@ -130,7 +132,7 @@ NVM
   HERE  \ pass-on baud rate table address to UARTISR
   240 BR , 480 BR , 960 BR , 1920 BR , 5760 BR , 11520 BR , 23040 BR ,
 
-  \ initilization of buffered UART handler (call this once)
+  \ initilization of buffered UART handler (call once with BR table index)
   : UARTISR ( n -- )
     2* ( BR table ) LITERAL + @ UART1_BRR1 !
     [ $0C UART1_CR2 ]C! \ enable TX and RX

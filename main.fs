@@ -1,7 +1,5 @@
 #require MBSERVER
 
-RAM
-
   2 CONSTANT BAUD9600
 
 NVM

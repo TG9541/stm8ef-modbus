@@ -1,5 +1,10 @@
 #require MBPROTO
 
+#require WIPE
+#require MBRESET
+MBRESET   \ Reset the MODBUS Function Code table
+WIPE
+
 #require ALIAS
 #require 'IDLE
 #require :NVM
@@ -10,11 +15,6 @@
 2 CONSTANT HOLDINGCELLS
 
 NVM
-
-  \ address Big Endien to Little Endien
-  : B>L ( aBE -- aLE )
-    1 XOR
-  ;
 
   \ --- FC01 "Read Coils"
 
@@ -74,20 +74,13 @@ NVM
   ;NVM ( xt ) 4 FC>XT !
 
 
-  \ MB 2 x 16 bit response
-  :NVM  ( -- )
-    mbp1 tx+ mbp2 tx+
-  ;RAM ALIAS txp12+ NVM
-
-
   \ --- FC05 handler "Write Single Coil"
-
   :NVM   ( -- )
     mbp1 1- ( #b) DUP 0 8 WITHIN IF
       mbp2 $FF00 =
       ( #b f ) coils B>L
       ( #b f a ) ROT ( f a #b ) B!
-      txp12+
+      MBSWR   \ single write response
     ELSE
       DROP   2 MBEC
     THEN
@@ -100,7 +93,7 @@ NVM
   ;RAM ALIAS mbrxd
 
 
-  \ MB range test 
+  \ MB range test
   :NVM  ( u -- f )
     mbp1 mbp2 + SWAP <
   ;RAM ALIAS mbprange? NVM
@@ -118,7 +111,7 @@ NVM
   :NVM  ( -- )
     COILBYTES mbprange? IF
       [ ( xt1 xt2 ) SWAP ] LITERAL  ( xt ) mbloop
-      txp12+
+      MBSWR
     ElSE
       2 MBEC
     THEN
@@ -137,7 +130,7 @@ NVM
   :NVM  ( -- )
     HOLDINGCELLS mbprange? IF
       [ ( xt1 xt2 ) SWAP ] LITERAL  ( xt ) mbloop
-      txp12+
+      MBSWR
     ElSE
       2 MBEC
     THEN

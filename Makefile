@@ -26,13 +26,13 @@ zip:
 defaults:
 	stm8flash -c stlinkv2 -p stm8s103f3 -s opt -w tools/stm8s103FactoryDefaults.bin
 
-flash: depend
+flash: target
 	stm8flash -c stlinkv2 -p stm8s103f3 -w out/$(STM8EF_BOARD)/$(STM8EF_BOARD).ihx
 
-load: depend
+load: target
 	tools/codeload.py -b out/$(STM8EF_BOARD) -p /dev/$(TERM_PORT) serial main.fs
 
-simload: $(forth) depend
+simload: $(forth) target
 	tools/simload.sh $(STM8EF_BOARD)
 	touch simload
 

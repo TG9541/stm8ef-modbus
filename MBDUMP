@@ -1,0 +1,9 @@
+\ STM8 eForth dump contents of rxbuf and txbuf to console for debugging
+
+\ show contents the RX and TX buffers
+: MBDUMP ( -- )
+  ."  MODBUS rxbuf:"
+  rxbuf rxp @ OVER - DUP . DUMP CR
+  ."  MODBUS txbuf:"
+  txbuf tbp @ OVER - DUP . DUMP CR
+;

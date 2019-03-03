@@ -1,11 +1,15 @@
+\ STM8 eForth MODBUS protocol handler - intended to run as an IDLE task
+
 #require UARTISR
 #require CRC16
 #require ]B!
 #require WIPE
 
 NVM
-  VARIABLE mbnode
-  VARIABLE crcerr
+  VARIABLE mbnode  \ MODBUS node id
+  VARIABLE crcerr  \ CRC error counter
+  VARIABLE mbact   \ action XT for generic extensions (e.g. debugging)
+  VARIABLE mbdef   \ action XT for default handler
 
   \ get MODBUS FC
   : mbfc ( -- c )
@@ -20,6 +24,11 @@ NVM
   \ 2nd MODBUS FC parameter
   : mbp2 ( -- n )
     rxbuf 4 + @
+  ;
+
+  \ MODBUS single write response (e.g FC05, FC06)
+  : MBSWR  ( -- )
+    mbp1 tx+ mbp2 tx+  \ copy 1st and 2nd parameter
   ;
 
   \ calc CRC16 from buffer a0 to a1
@@ -37,13 +46,18 @@ NVM
   ;
 
   \ default FC handler - raise EC 1 "ILLEGAL FUNCTION"
-  : FCINV ( -- )
-    1 MBEC
+  : FCDEF ( -- )
+    mbdef @ ?DUP IF
+      \ maybe there is something else you want to try
+      ( xt ) EXECUTE
+    ELSE
+      1 MBEC
+    THEN
     [ HERE ( xt ) ]
   ;
 
-  \ make FC-XT Table for FC>XT, initialize with "Invalid FC"
-  HERE ( [ tab ] ) ' FCINV ( [ a1 a2 ] )
+  \ make FC-XT Table for FC>XT, initialize with "default FC handler"
+  HERE ( [ tab ] ) ' FCDEF ( [ a1 a2 ] )
     DUP , DUP , DUP , DUP , DUP , DUP , DUP , DUP ,
     DUP , DUP , DUP , DUP , DUP , DUP , DUP ,     ,
 
@@ -52,7 +66,7 @@ NVM
     1- 2* ( [ tab ] ) LITERAL +
   ;
 
-  \ process MB  loop in (xt) steps from mbp1 to mbp1+mbp2
+  \ process MB  loop in (xt), steps from mbp1 to mbp1+mbp2
   : mbloop ( xt -- )
     mbp1 mbp2 OVER + SWAP  DO
       ( xt ) I OVER EXECUTE ( inc )
@@ -80,9 +94,12 @@ NVM
           DUP 1 17 WITHIN IF
              FC>XT @ EXECUTE
           ELSE
-            FCINV
+            FCDEF
           THEN
           tbp @ txbuf ( a1 a0 ) MBCRC ( CRC-LE ) tx+
+          mbact @ ?DUP IF
+            ( xt ) EXECUTE
+          THEN
           send rxres
         THEN
       ELSE
@@ -91,14 +108,50 @@ NVM
     THEN
   ;
 
+  \ address Big Endien to Little Endien
+  : B>L ( aBE -- aLE )
+    1 XOR
+  ;
+
 WIPE RAM
 
-\\
+\\ Example
 
-  \ show contents the RX and TX buffers
-  : bufdump ( -- )
-    CR ."  rxbuf:"
-    rxbuf rxp @ OVER - DUP . DUMP
-    CR ."  txbuf:"
-    txbuf tbp @ OVER - DUP . DUMP
+\ Minimal MODBUS server with a FC06 "Write Single Register" handler
+
+#require MBPROTO
+
+RAM
+#require MBRESET
+MBRESET   \ Reset the MODBUS Function Code table
+
+#require :NVM
+#require 'IDLE
+
+  2 CONSTANT BAUD9600
+
+NVM
+#require MBDUMP
+
+  \ --- FC06 handler "Write Single Register"
+  :NVM  ( -- )
+    \ write register address and value to the console
+    ." Write register:" mbp1 . ." =" mbp2 . CR
+    MBSWR  \ acknowledge FC06
+  ;NVM ( xt ) 6 FC>XT !   \ register the FC handler
+
+  : showfc ( -- )
+    rxbuf C@ ." FC:" . CR
+    1 MBEC  \ set error code
   ;
+
+  : init ( -- )
+    BAUD9600 UARTISR              \ initialize UART handler, set baud rate
+    1 mbnode !                    \ 10 is the node address
+    [ ' showfc ] LITERAL mbdef !  \ FC default action (optional feature)
+    [ ' MBDUMP ] LITERAL mbact !  \ show buffers (debug demo)
+    [ ' MBPROTO ] LITERAL 'IDLE ! \ run MB protocol handler as idle task
+  ;
+
+  ' init    'BOOT !
+WIPE RAM

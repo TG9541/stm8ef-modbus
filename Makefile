@@ -53,4 +53,4 @@ depend:
 	touch depend
 
 clean:
-	rm -rf target STM8S103.efr STM8S105.efr simload depend docs lib mcu out tools
+	rm -rf target STM8S103.efr STM8S105.efr simload depend docs lib mcu out inc tools

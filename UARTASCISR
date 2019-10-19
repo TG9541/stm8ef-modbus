@@ -37,8 +37,6 @@ NVM
   
   \ Start UART TX ISR chain
 
-
-
   : send ( -- )
     BUStx                    \ enable TX driver
     txbuf txp !              \ next char: buffer start
@@ -143,20 +141,3 @@ NVM
 
 WIPE RAM
 
-\\ Example, run e.g. in SWIMCOM
-#include UARTISR
-
-  \ show contents the RX and TX buffers
-  : bufdump ( -- )
-    CR ."  rxbuf:"
-    rxbuf rxp @ OVER - DUP . DUMP
-    CR ."  txbuf:"
-    txbuf tbp @ OVER - DUP . DUMP
-  ;
-
-2 UARTISR
-txbuf TXLEN 66 FILL
-65 txbuf C!
-10 txbuf TXLEN 1- + C!
-txlen tbp +!
-send

@@ -119,6 +119,7 @@ WIPE RAM
 #require ]C!
 #require OSCFREQ
 #require UART_DIV
+#require WIPE
 
 
 : BR ( br -- )   \ shorthand for baud rate table

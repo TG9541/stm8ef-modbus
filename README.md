@@ -9,13 +9,27 @@ The MODBUS implementation covers basic FCs and implements a subset of [MODBUS V1
 
 ## Supported Boards
 
+### C0135 4-Relay Board
 The [C0135 board](https://github.com/TG9541/stm8ef/wiki/Board-C0135) is the default target.
 
 ![c0135-small](https://user-images.githubusercontent.com/5466977/52519844-fb3c6580-2c61-11e9-8f36-5a031338e6e5.png)
 
-It's easy, however, to build custom targets, e.g. using the $0.80 [MINDEV board](https://github.com/TG9541/stm8ef/wiki/Breakout-Boards#stm8s103f3p6-breakout-board), a cheap relay board, and an RS485 break-out board.
+### STM8S001J3RS485 Mini MODBUS Board
+
+The STM8S001J3RS485 board is a tiny MODBUS node based on the STM8S001J3M3 "Low Density Value Line" STM8S µC in a SO8 package.
+
+[![STM8S001J3RS485](https://raw.githubusercontent.com/TG9541/stm8s001rs485/master/doc/STM8S001J3_RS485_front.png)](https://github.com/TG9541/stm8s001rs485)
+
+This is work in progress. 
+
+The code can be built and transferred to the devide by running `make -f forth.mk BOARD=STM8S001J3RS485 flash`. After flashing the `BUSCTRL` file in the board configuration folder should be transferred using e4thcom and a 2-wire connection through PC5. After that `main.fs` in the project root folder can be transferred.
+
+### MINDEV STM8S103F3 Breakout Board
+It's easy to build custom targets, e.g. using the $0.80 [MINDEV board](https://github.com/TG9541/stm8ef/wiki/Breakout-Boards#stm8s103f3p6-breakout-board), a cheap relay board, and an RS485 break-out board.
 
 ![MINDEV](https://camo.githubusercontent.com/82bd480f176951de9a469e134f543a6570f48597/68747470733a2f2f616530312e616c6963646e2e636f6d2f6b662f485442314e6642615056585858586263587058587136785846585858362f357063732d6c6f742d53544d3853313033463350362d73797374656d2d626f6172642d53544d38532d53544d382d646576656c6f706d656e742d626f6172642d6d696e696d756d2d636f72652d626f6172642e6a70675f323230783232302e6a7067)
+
+When using PB5 for RS485 direction control (-> `BUSCTRL`) the C0135 code can be used.
 
 ## Supported MODBUS Function Codes
 
@@ -52,7 +66,7 @@ The software architecture separates hardware abstraction and application in simp
 
 Layer|Source file|Description
 -|-|-
-5|main.fs|configuration and application layer
+5|`main.fs`|configuration and application layer
 4|`MBSERVER`|MODBUS FC plug-ins
 3|`MBPROTO`|MODBUS protocol layer
 2|`UARTISR`|buffered UART communication
@@ -60,9 +74,9 @@ Layer|Source file|Description
 0|STM8 eForth|lightweight interactive multi-tasking OS
 
 The code is organized in the following execution domains:
-* interrupt service routine for buffered communication
-* foreground "idle mode" protocol handler
-* fixed-cadence background teask for I/O logic
-* foreground CLI provided by the SWIMCOM STM8 eForth
+* interrupt service routines for buffered MODBUS communication
+* fixed-rate background task for I/O logic (asynchronous to MODBUS)
+* foreground "idle mode" MODBUS protocol handler
+* foreground command line interface (CLI) through independent COM port provided by STM8 eForth
 
-Concerns are nicely separeted - it's even possible to change FC handlers without restarting the application!
+The different concerns are separeted in the code - it's even possible to change FC handlers through the CLI without restarting the application!

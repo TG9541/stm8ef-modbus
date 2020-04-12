@@ -128,8 +128,6 @@ MBRESET   \ Reset the MODBUS Function Code table
 #require :NVM
 #require 'IDLE
 
-  2 CONSTANT BAUD9600
-
 NVM
 #require MBDUMP
 
@@ -146,8 +144,8 @@ NVM
   ;
 
   : init ( -- )
-    BAUD9600 UARTISR              \ initialize UART handler, set baud rate
-    1 mbnode !                    \ 10 is the node address
+    0 UARTISR                     \ init UART handler w/ default baud rate
+    1 mbnode !                    \ set node address
     [ ' showfc ] LITERAL mbdef !  \ FC default action (optional feature)
     [ ' MBDUMP ] LITERAL mbact !  \ show buffers (debug demo)
     [ ' MBPROTO ] LITERAL 'IDLE ! \ run MB protocol handler as idle task

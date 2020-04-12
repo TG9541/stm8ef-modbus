@@ -27,8 +27,8 @@ NVM
 
   \ FC01 handler
   :NVM  ( -- )
-    [ ( xt1 xt2 ) SWAP ] LITERAL 1 ( xt bpu ) mbread
-  ;NVM ( xt ) 1 FC>XT !
+    [ ( xt xth ) SWAP ] LITERAL 1 ( xth xt bpu ) mbread
+  ;NVM ( xth ) 1 FC>XT !
 
 
   \ --- FC02 "Read Discrete Inputs"
@@ -42,8 +42,8 @@ NVM
 
   \ FC02 handler
   :NVM  ( -- )
-     [ ( xt1 xt2 ) SWAP ] LITERAL 1 ( xt bpu ) mbread
-  ;NVM ( xt ) 2 FC>XT !
+     [ ( xt xth ) SWAP ] LITERAL 1 ( xth xt bpu ) mbread
+  ;NVM ( xth ) 2 FC>XT !
 
 
   \ --- FC03 "Read Holding Registers"
@@ -52,13 +52,22 @@ NVM
 
   \ FC03 holding register iterated transfer
   :NVM  ( i -- 1 )
-    2* holding + @ tx+   1 ( inc )
+    ( i ) DUP 0 EECELLS WITHIN IF
+      2* EESTART + @
+    ELSE
+      ( i ) EECELLS - DUP 0 HOLDINGCELLS WITHIN IF
+        2* holding + @
+      ELSE
+        ( i ) DROP 0
+      THEN
+    THEN
+    tx+   1 ( inc )
   ;NVM ( xt )
 
   \ FC03 handler
   :NVM  ( -- )
-     [ ( xt1 xt2 ) SWAP ] LITERAL 16 ( xt bpu ) mbread
-  ;NVM ( xt ) 3 FC>XT !
+     [ ( xt xth ) SWAP ] LITERAL 16 ( xth xt bpu ) mbread
+  ;NVM ( xth ) 3 FC>XT !
 
 
   \ --- FC04 "Read Input Registers"
@@ -110,12 +119,12 @@ NVM
   \ FC15 handler
   :NVM  ( -- )
     COILBYTES mbprange? IF
-      [ ( xt1 xt2 ) SWAP ] LITERAL  ( xt ) mbloop
+      [ ( xt xth ) SWAP ] LITERAL  ( xth xt ) mbloop
       MBSWR
     ElSE
       2 MBEC
     THEN
-  ;NVM ( xt ) 15 FC>XT !
+  ;NVM ( xth ) 15 FC>XT !
 
 
   \ --- FC16 "Write Multiple Register"

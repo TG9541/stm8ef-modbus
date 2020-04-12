@@ -7,9 +7,11 @@
 #require WIPE
 
 NVM
+#require OUT!
+
   \ output handler
   :NVM
-     coils @ out!
+     coils @ OUT!
   ;NVM ( xt )
 
   \ --- MODBUS server startup

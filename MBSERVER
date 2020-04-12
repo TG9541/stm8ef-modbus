@@ -167,12 +167,9 @@ NVM
     THEN
   ;NVM ( xt ) 16 FC>XT !
 
-
   \ --- MODBUS server startup
-
   : MBSERVER ( -- )
-    0 coils !
-    [ ' MBPROTO ] LITERAL 'IDLE !
+    [ ' MBPROTO ( xt ) ] LITERAL 'IDLE !
   ;
 
 WIPE RAM

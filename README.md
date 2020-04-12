@@ -20,7 +20,7 @@ The STM8S001J3RS485 board is a tiny MODBUS node based on the STM8S001J3M3 "Low D
 
 [![STM8S001J3RS485](https://raw.githubusercontent.com/TG9541/stm8s001rs485/master/doc/STM8S001J3_RS485_front.png)](https://github.com/TG9541/stm8s001rs485)
 
-This is work in progress. 
+This is work in progress.
 
 The code can be built and transferred to the devide by running `make -f forth.mk BOARD=STM8S001J3RS485 flash`. After flashing the `BUSCTRL` file in the board configuration folder should be transferred using e4thcom and a 2-wire connection through PC5. After that `main.fs` in the project root folder can be transferred.
 
@@ -42,9 +42,9 @@ FC | Description | Support
 **3** | **Read Holding Registers** | implemented (variables in RAM)
 **4** | **Read Input Registers** | implemented
 **5** | **Write Single Coil** | implemented
-6 | Write Single (Holding) Register | (write issue if needed)
+**6** | **Write Single (Holding) Register** | implemented
 **15** | **Write Multiple Coils** | implemented
-**16** | **Write Multiple Registers** | implemented
+16 | **Write Multiple Registers** | partial
 
 Currently there are no diagnostic functions and communication properties have to be hard coded.
 
@@ -78,5 +78,6 @@ The code is organized in the following execution domains:
 * fixed-rate background task for I/O logic (asynchronous to MODBUS)
 * foreground "idle mode" MODBUS protocol handler
 * foreground command line interface (CLI) through independent COM port provided by STM8 eForth
+* handlers for MODBUS I/O: `mbpre` for input, `mbact` for output actions)
 
-The different concerns are separeted in the code - it's even possible to change FC handlers through the CLI without restarting the application!
+The different concerns are separeted in the code - FC handlers can be changed through the CLI without restarting the application!

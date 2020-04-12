@@ -1,15 +1,32 @@
 #require MBSERVER
 
-  2 CONSTANT BAUD9600
+  $4000  CONSTANT  EE_NODE
+  $4002  CONSTANT  EE_BAUD
+
+#require :NVM
+#require WIPE
 
 NVM
-  \ --- MODBUS server startup
+#require OUT!
 
+  \ output handler
+  :NVM
+     coils @ OUT!
+  ;NVM ( xt )
+
+  \ --- MODBUS server startup
   : init ( -- )
-    BAUD9600 UARTISR
-    1 mbnode !
+    ( xt ) LITERAL mbact !
+    0 coils !
+
+    EE_BAUD @ ( #BR ) UARTISR
+    EE_NODE @ DUP 0 256 WITHIN NOT IF
+      DROP 1  \ out of range - use default
+    THEN
+    ( n ) mbnode !
+
     MBSERVER
   ;
 
-  ' init    'BOOT !
-RAM
+  ' init 'BOOT !
+WIPE RAM

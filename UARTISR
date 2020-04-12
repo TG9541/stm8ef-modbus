@@ -1,7 +1,7 @@
 \ STM8 eForth buffered UART ISR handler
 \ baud rate initialization for UARTISR:
-\ 0: 2400, 1:4800, 2:9600, 3:19200, 4:57600, 5:115200, 6:230400
- 
+\ 0: default=9600,
+\ 1: 2400, 2:4800, 3:9600, 4:19200, 5:57600, 6:115200, 7:230400
 
 #require WIPE
 
@@ -129,10 +129,13 @@ WIPE RAM
 NVM
 
   HERE  \ pass-on baud rate table address to UARTISR
-  240 BR , 480 BR , 960 BR , 1920 BR , 5760 BR , 11520 BR , 23040 BR ,
+  960 BR , 240 BR , 480 BR , 960 BR , 1920 BR , 5760 BR , 11520 BR , 23040 BR ,
 
   \ initilization of buffered UART handler (call this once)
   : UARTISR ( n -- )
+    DUP 0 8 WITHIN NOT IF
+      DROP 0  \ out of range - use default baud rate
+    THEN
     2* ( BR table ) LITERAL + @ UART1_BRR1 !
     [ $0C UART1_CR2 ]C! \ enable TX and RX
     \ PINDEBUG

@@ -8,8 +8,15 @@
 NVM
   VARIABLE mbnode  \ MODBUS node id
   VARIABLE crcerr  \ CRC error counter
-  VARIABLE mbact   \ action XT for generic extensions (e.g. debugging)
-  VARIABLE mbdef   \ action XT for default handler
+  VARIABLE mbpre   \ xt for FC preparation (e.g. reading inputs)
+  VARIABLE mbact   \ xt for oputput action (e.g. output, debugging)
+  VARIABLE mbdef   \ xt for default handler
+
+  \ execute xt if not 0
+  : @?EXEC ( xt -- ) @ ?DUP IF
+    ( xt ) EXECUTE
+    THEN
+  ;
 
   \ get MODBUS FC
   : mbfc ( -- c )
@@ -83,28 +90,28 @@ NVM
   \ MODBUS protocol handler
   : MBPROTO ( -- )
     rxbuf rxp @ - ( rx )
-    1 TIM tstamp @ - <   AND ( message trigger )
+    1 TIM tstamp @ - < AND ( message trigger )
     IF
       rxp @ 2- ( a1 ) DUP rxbuf ( a1 a1 a0 )
       MBCRC ( a1 crc-le ) SWAP @ = ( crc OK )
       ( crc-ok ) IF
-        mbnode @ rxbuf C@ = ( node address match ) IF
-          rxbuf    C@  ( DUP  ." S: " . CR )     txc+
-          rxbuf 1+ C@  DUP txc+  ( fc )
+        mbnode @ rxbuf C@ = IF  \ node address match
+          mbpre @?EXEC    \ preparation handler, e.g. read inputs
+          rxbuf    C@     txc+
+          rxbuf 1+ C@ DUP txc+  ( fc )
           DUP 1 17 WITHIN IF
-             FC>XT @ EXECUTE
+             FC>XT @?EXEC \ get and execute FC handler
           ELSE
-            FCDEF
+            FCDEF         \ default handler
           THEN
           tbp @ txbuf ( a1 a0 ) MBCRC ( CRC-LE ) tx+
-          mbact @ ?DUP IF
-            ( xt ) EXECUTE
-          THEN
-          send rxres
+          mbact @?EXEC    \ action handler, e.g. write outputs
+          send
         THEN
       ELSE
         1 crcerr +!
       THEN
+      rxres
     THEN
   ;
 
@@ -122,13 +129,12 @@ WIPE RAM
 #require MBPROTO
 
 RAM
+#require WIPE
 #require MBRESET
 MBRESET   \ Reset the MODBUS Function Code table
 
 #require :NVM
 #require 'IDLE
-
-  2 CONSTANT BAUD9600
 
 NVM
 #require MBDUMP
@@ -146,12 +152,12 @@ NVM
   ;
 
   : init ( -- )
-    BAUD9600 UARTISR              \ initialize UART handler, set baud rate
-    1 mbnode !                    \ 10 is the node address
+    0 UARTISR                     \ init UART handler w/ default baud rate
+    1 mbnode !                    \ set node address
     [ ' showfc ] LITERAL mbdef !  \ FC default action (optional feature)
     [ ' MBDUMP ] LITERAL mbact !  \ show buffers (debug demo)
     [ ' MBPROTO ] LITERAL 'IDLE ! \ run MB protocol handler as idle task
   ;
 
-  ' init    'BOOT !
+  ' init 'BOOT !
 WIPE RAM

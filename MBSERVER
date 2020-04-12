@@ -9,10 +9,15 @@ WIPE
 #require 'IDLE
 #require :NVM
 #require WIPE
+#require LOCK
+#require ULOCK
 
 4 CONSTANT COILBYTES
 2 CONSTANT INPUTCELLS
 2 CONSTANT HOLDINGCELLS
+
+1024  CONSTANT EECELLS   \ this is the maximum for any STM8 device
+$4000 CONSTANT EESTART
 
 NVM
 
@@ -27,8 +32,8 @@ NVM
 
   \ FC01 handler
   :NVM  ( -- )
-    [ ( xt1 xt2 ) SWAP ] LITERAL 1 ( xt bpu ) mbread
-  ;NVM ( xt ) 1 FC>XT !
+    [ ( xt xth ) SWAP ] LITERAL 1 ( xth xt bpu ) mbread
+  ;NVM ( xth ) 1 FC>XT !
 
 
   \ --- FC02 "Read Discrete Inputs"
@@ -42,8 +47,8 @@ NVM
 
   \ FC02 handler
   :NVM  ( -- )
-     [ ( xt1 xt2 ) SWAP ] LITERAL 1 ( xt bpu ) mbread
-  ;NVM ( xt ) 2 FC>XT !
+     [ ( xt xth ) SWAP ] LITERAL 1 ( xth xt bpu ) mbread
+  ;NVM ( xth ) 2 FC>XT !
 
 
   \ --- FC03 "Read Holding Registers"
@@ -52,13 +57,22 @@ NVM
 
   \ FC03 holding register iterated transfer
   :NVM  ( i -- 1 )
-    2* holding + @ tx+   1 ( inc )
+    ( i ) DUP 0 EECELLS WITHIN IF
+      2* EESTART + @
+    ELSE
+      ( i ) EECELLS - DUP 0 HOLDINGCELLS WITHIN IF
+        2* holding + @
+      ELSE
+        ( i ) DROP 0
+      THEN
+    THEN
+    tx+   1 ( inc )
   ;NVM ( xt )
 
   \ FC03 handler
   :NVM  ( -- )
-     [ ( xt1 xt2 ) SWAP ] LITERAL 16 ( xt bpu ) mbread
-  ;NVM ( xt ) 3 FC>XT !
+     [ ( xt xth ) SWAP ] LITERAL 16 ( xth xt bpu ) mbread
+  ;NVM ( xth ) 3 FC>XT !
 
 
   \ --- FC04 "Read Input Registers"
@@ -70,13 +84,13 @@ NVM
 
   \ FC04 handler
   :NVM  ( -- )
-     [ ( xt1 xt2 ) SWAP ] LITERAL 16 ( xt bpu ) mbread
-  ;NVM ( xt ) 4 FC>XT !
+     [ ( xt xth ) SWAP ] LITERAL 16 ( xth xt bpu ) mbread
+  ;NVM ( xth ) 4 FC>XT !
 
 
   \ --- FC05 handler "Write Single Coil"
   :NVM   ( -- )
-    mbp1 1- ( #b) DUP 0 8 WITHIN IF
+    mbp1 1- ( #b ) DUP 0 [ COILBYTES 8 * ] LITERAL WITHIN IF
       mbp2 $FF00 =
       ( #b f ) coils B>L
       ( #b f a ) ROT ( f a #b ) B!
@@ -84,7 +98,24 @@ NVM
     ELSE
       DROP   2 MBEC
     THEN
-  ;NVM 5 FC>XT !
+  ;NVM ( xth ) 5 FC>XT !
+
+
+  \ --- FC06 handler "Write Single Register"
+  :NVM   ( -- )
+    mbp1 ( #r ) DUP 0 EECELLS WITHIN IF
+      ULOCK
+      mbp2 SWAP ( n #r ) 2* EESTART + !
+      LOCK
+      MBSWR   \ single write response
+    ELSE ( #r ) EECELLS - DUP 0 HOLDINGCELLS WITHIN IF
+        mbp2 SWAP ( n #r ) 2* holding + !
+        MBSWR   \ single write response
+      ELSE
+        DROP   2 MBEC
+      THEN
+    THEN
+  ;NVM ( xth ) 6 FC>XT !
 
 
   \ MB read rxbuf payload data
@@ -110,12 +141,12 @@ NVM
   \ FC15 handler
   :NVM  ( -- )
     COILBYTES mbprange? IF
-      [ ( xt1 xt2 ) SWAP ] LITERAL  ( xt ) mbloop
+      [ ( xt xth ) SWAP ] LITERAL  ( xth xt ) mbloop
       MBSWR
     ElSE
       2 MBEC
     THEN
-  ;NVM ( xt ) 15 FC>XT !
+  ;NVM ( xth ) 15 FC>XT !
 
 
   \ --- FC16 "Write Multiple Register"
@@ -136,12 +167,9 @@ NVM
     THEN
   ;NVM ( xt ) 16 FC>XT !
 
-
   \ --- MODBUS server startup
-
   : MBSERVER ( -- )
-    0 coils !
-    [ ' MBPROTO ] LITERAL 'IDLE !
+    [ ' MBPROTO ( xt ) ] LITERAL 'IDLE !
   ;
 
 WIPE RAM

@@ -8,7 +8,7 @@ install:
 - docker run -v `pwd`:/home tg9541/docker-sdcc:V3.8.4 /bin/sh -c "sdcc --version ;
   sstm8 -version"
 script: docker run -v `pwd`:/home tg9541/docker-sdcc:V3.8.4 /bin/sh -c "cd /home &&
-  make test && make zip && cat SWIMCOM-forth.ihx"
+  make test && make zip"
 deploy:
   provider: releases
   api_key:
@@ -16,6 +16,6 @@ deploy:
   file: SWIMCOM-forth.zip
   skip_cleanup: true
   on:
-    tags: true
+    tags: false
     branch: master
     repo: TG9541/stm8ef-modbus

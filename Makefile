@@ -19,6 +19,20 @@ forth=$(wildcard *fs) $(mmforth)
 # Usage:make term BOARD=<board dir> [TERM_PORT=ttyXXXX] [TERM_BAUD=nnnn] [TERM_FLAGS="--half-duplex --idm"]
 all: load
 
+release: zip tgz
+
+zip: simload
+	find out/ -name "*.ihx" -print | zip -r out/stm8ef-bin LICENSE.md docs/words.md inc/* mcu/* lib/* -@
+	find out/ -name "simbreak.txt" -print | zip -r out/stm8ef-bin tools/* -@
+	find out/ -name "target" -print | zip -r out/stm8ef-bin -@
+
+tgz: simload
+	( find out/ -path "*target/*" -print0 ; find out/ -name "*.ihx" -type f -print0 ; find out/ -name "simbreak.txt" -type f -print0 ) | tar -czvf out/stm8ef-bin.tgz LICENSE.md docs/words.md mcu lib tools --null -T -
+	( find out/ -name "forth.rst" -type f -print0 ) | tar -czvf out/stm8ef-rst.tgz --null -T -
+
+build: words
+	make BOARD=CORE
+
 load: flash
 	tools/codeload.py -b out/$(STM8EF_BOARD) -p /dev/$(TERM_PORT) serial $(STM8EF_BOARD)/board.fs
 

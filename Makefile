@@ -68,9 +68,6 @@ depend:
 term:
 	$(E4THCOM) -t stm8ef -p .:lib $(TERM_FLAGS) -d $(TERM_PORT) -b B$(TERM_BAUD)
 
-zip:
-	zip -r ${STM8EF_BOARD}-forth ${STM8EF_BOARD}-forth.ihx
-
 clean:
 	rm -rf target docs lib mcu out inc tools
 	rm -f forth.asm forth.h forth.mk main.c STM8S103.efr STM8S105.efr

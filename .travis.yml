@@ -16,6 +16,6 @@ deploy:
     - "out/stm8ef-bin.tgz"
   skip_cleanup: true
   on:
-    tags: false
+    tags: true
     branch: master
     repo: TG9541/stm8ef-modbus

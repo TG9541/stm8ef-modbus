@@ -120,7 +120,12 @@ NVM
     1 XOR
   ;
 
-WIPE RAM
+RAM
+
+\ To speed up MODBUS server development:
+\ * load MBPROTO manually
+\ * #require and run PERSIST
+\ RESET will then go back to this point :-)
 
 \\ Example
 

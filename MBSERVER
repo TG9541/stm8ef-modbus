@@ -1,10 +1,15 @@
+\ A simple STM8 eForth MODBUS Server based on MBPROTO
+
+\ Check if the MODBUS protocol core is already present
 #require MBPROTO
 
+\ Resetting the FC handler table can be helpful for development
 #require WIPE
 #require MBRESET
 MBRESET   \ Reset the MODBUS Function Code table
 WIPE
 
+\ Compile time requirements
 #require ALIAS
 #require 'IDLE
 #require :NVM
@@ -12,6 +17,7 @@ WIPE
 #require LOCK
 #require ULOCK
 
+\ Compile time symbols
 4 CONSTANT COILBYTES
 2 CONSTANT INPUTCELLS
 2 CONSTANT HOLDINGCELLS
@@ -19,7 +25,7 @@ WIPE
 1024  CONSTANT EECELLS   \ this is the maximum for any STM8 device
 $4000 CONSTANT EESTART
 
-NVM
+NVM  \ compile to Flash memory from here on
 
   \ --- FC01 "Read Coils"
 

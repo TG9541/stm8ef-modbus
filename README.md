@@ -3,7 +3,7 @@
 
 This repository provides a lightweight MODBUS RTU implementation with [STM8 eForth](https://github.com/TG9541/stm8ef/wiki) for "wired" control nodes, e.g. for home automation. The is intended for low-cost STM8S 8bit µCs like the STM8S003F3P6 with 8K Flash and 1K RAM.
 
-The MODBUS I/O Node implementation for the low-cost [C0135 4-Relay RTU module][C135] serves as a demonstrator, and in [GitHub Releases] you'll find a ready-to-use binary.
+The MODBUS I/O Node implementation for the low-cost [C0135 4-Relay RTU module][C0135] serves as a demonstrator, and in [GitHub Releases](https://github.com/TG9541/stm8ef-modbus/releases) you'll find a ready-to-use binary.
 
 Using STM8 Forth for MODBUS has many advantages: while the implementation is very compact it gives applications access to many advanced architectural features like independent I/O-locic execution in the background, a CLI (command line interface). The Forth compiler is included and you can literally change the code through the built-in console while your board is communicating with the MODBUS host!
 
@@ -80,7 +80,7 @@ The software architecture separates hardware abstraction and application in simp
 
 Layer|Source file|Description
 -|-|-
-5|`main.fs` or `{BOARD}/board.fs|configuration and application layer
+5|`main.fs` or `{BOARD}/board.fs`|configuration and application layer
 4|`MBSERVER`|MODBUS FC plug-ins
 3|`MBPROTO`|MODBUS protocol layer
 2|`UARTISR`|buffered UART communication

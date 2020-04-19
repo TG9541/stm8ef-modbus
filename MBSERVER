@@ -173,9 +173,10 @@ NVM  \ compile to Flash memory from here on
     THEN
   ;NVM ( xt ) 16 FC>XT !
 
-  \ --- MODBUS server startup
+  \ Registration of FC handlers complete
+
+  \ A dumy word for #require
   : MBSERVER ( -- )
-    [ ' MBPROTO ( xt ) ] LITERAL 'IDLE !
   ;
 
 WIPE RAM

@@ -16,7 +16,7 @@ Right now there is no MODBUS master implementation but the code in this reposito
 ### C0135 4-Relay Board
 The [C0135 board][C0135] is the default target.
 
-[C0135]: (https://github.com/TG9541/stm8ef/wiki/Board-C0135)
+[C0135]: https://github.com/TG9541/stm8ef/wiki/Board-C0135
 
 ![c0135-small](https://user-images.githubusercontent.com/5466977/52519844-fb3c6580-2c61-11e9-8f36-5a031338e6e5.png)
 
@@ -54,7 +54,7 @@ FC | Description | Support
 **5** | **Write Single Coil** | implemented
 **6** | **Write Single (Holding) Register** | implemented
 **15** | **Write Multiple Coils** | implemented
-16 | **Write Multiple Registers** | partial
+16 | Write Multiple Registers | partial
 
 An example for diagnostic functions is in `main.fs` and a way to load communication properties from the EEPROM is implemented in `C0135/board.fs`.
 

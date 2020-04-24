@@ -1,0 +1,34 @@
+\ C0135 4-Relay board: read low side inputs - License MIT refer to STM8 eForth
+
+\ This is close to the iron
+\res MCU: STM8S105
+\res export PC_IDR PC_CR1  PD_IDR PD_CR1
+
+\ copy bit to C flag, set/res bit
+#require ]BC
+#require ]B!
+#require WIPE
+
+\ opcode: rotate C left through TOS lsb
+: RLC(1,X) $6901 ,  ; IMMEDIATE
+
+NVM
+  \ read C0135 inputs - connect INx to GND to get a "1"
+  : IN@ ( -- n )
+    -1  \ inputs are "NPN" (in PLC speak), start with all bits 1
+    [ ( IN4 ) PC_IDR 6 ]BC RLC(1,X)  \ some simple STM8 assembly
+    [ ( IN3 ) PC_IDR 7 ]BC RLC(1,X)  \ to load bits to C
+    [ ( IN2 ) PD_IDR 2 ]BC RLC(1,X)  \ and rotate them into the
+    [ ( IN1 ) PD_IDR 3 ]BC RLC(1,X)  \ Top Of Stack low-byte
+    NOT
+  ;
+
+  \ init C0135 inputs
+  : IN@INIT ( -- )
+    \ let's assume that Px_DDR are still in reset state
+    [ ( IN1 ) 1 PD_CR1 3 ]B!  \ set pull-up for NPN (low side) switches
+    [ ( IN2 ) 1 PD_CR1 2 ]B!
+    [ ( IN3 ) 1 PC_CR1 7 ]B!
+    [ ( IN4 ) 1 PC_CR1 6 ]B!
+  ;
+WIPE RAM

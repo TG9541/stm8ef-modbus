@@ -38,7 +38,7 @@ NVM  \ compile to Flash memory from here on
 
   \ FC01 handler
   :NVM  ( -- )
-    [ ( xt xth ) SWAP ] LITERAL 1 ( xth xt bpu ) mbread
+    [ ( xt xth ) SWAP ] LITERAL 1 ( xt bpu ) mbread
   ;NVM ( xth ) 1 FC>XT !
 
 
@@ -53,7 +53,7 @@ NVM  \ compile to Flash memory from here on
 
   \ FC02 handler
   :NVM  ( -- )
-     [ ( xt xth ) SWAP ] LITERAL 1 ( xth xt bpu ) mbread
+     [ ( xt xth ) SWAP ] LITERAL 1 ( xt bpu ) mbread
   ;NVM ( xth ) 2 FC>XT !
 
 
@@ -77,7 +77,7 @@ NVM  \ compile to Flash memory from here on
 
   \ FC03 handler
   :NVM  ( -- )
-     [ ( xt xth ) SWAP ] LITERAL 16 ( xth xt bpu ) mbread
+     [ ( xt xth ) SWAP ] LITERAL 16 ( xt bpu ) mbread
   ;NVM ( xth ) 3 FC>XT !
 
 
@@ -90,7 +90,7 @@ NVM  \ compile to Flash memory from here on
 
   \ FC04 handler
   :NVM  ( -- )
-     [ ( xt xth ) SWAP ] LITERAL 16 ( xth xt bpu ) mbread
+     [ ( xt xth ) SWAP ] LITERAL 16 ( xt bpu ) mbread
   ;NVM ( xth ) 4 FC>XT !
 
 

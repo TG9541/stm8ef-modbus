@@ -1,7 +1,16 @@
 \ C0135 STM8 eForth MODBUS board code
 
+( Hint for non-Forthers )
+\ - this and the above are comments
+\ - @ means "read" and ! means "write"
+\ - : means "compile", [ switches to "interpret", ] back and ; "end compile"
+\ - #require, \res, etc are e4thcom or codeload.py keywords
+
 \ compile MODBUS server and protocol words
 #require MBSERVER
+
+\ We need the C0135 "read inputs" word
+#require C0135/IN@
 
 \ we're in RAM mode: load "scaffolding words"
 #require :NVM
@@ -10,23 +19,27 @@
 #require ULOCK
 #require 'IDLE
 
-\ temporary symbols
+\ define temporary constants
 $4000  CONSTANT  EE_NODE
 $4002  CONSTANT  EE_BAUD
 
+\ now compile to Flash ROM
 NVM
-\ from here on compile to Flash ROM
-#require OUT!
+  \ headerless code Preparation Handler
+  :NVM
+     IN@ inputs !
+  ;NVM ( xt-pre )  \ compile time: keep this eXecution Token on the stack
 
   \ headerless code Action Handler
   :NVM
      coils @ OUT!
-  ;NVM ( xt-act )  \ compile time: keep this eXecution Token on the stack
+  ;NVM ( xt-act )  \ and also this
 
   \ --- MODBUS server startup
   : init ( -- )
     \ register the xt (see above) as the MODBUS Action Handler
     ( xt-act ) LITERAL mbact !
+    ( xt-pre ) LITERAL mbpre !
 
     \ Holding C0135 key "S2" while start-up resets Node-ID and baud rate
     BKEY IF
@@ -40,6 +53,9 @@ NVM
         BKEY 0=
       UNTIL
     THEN
+
+    \ initialize C0135 inputs
+    IN@INIT
 
     \ initialize MODBUS "coils" and outputs
     0 coils !  0 OUT!

@@ -9,8 +9,8 @@
 \ compile MODBUS server and protocol words
 #require MBSERVER
 
-\ We need the C0135 "read inputs" word
-#require C0135/IN@
+\ We need C0135 "read inputs" word
+#include C0135/IN@
 
 \ we're in RAM mode: load "scaffolding words"
 #require :NVM
@@ -18,6 +18,7 @@
 #require LOCK
 #require ULOCK
 #require 'IDLE
+#require .OK
 
 \ define temporary constants
 $4000  CONSTANT  EE_NODE
@@ -68,6 +69,7 @@ NVM
     EE_BAUD @ ( #BR ) UARTISR
 
     [ ' MBPROTO ( xt ) ] LITERAL 'IDLE !
+    .OK
   ;
 
   \ register initialization

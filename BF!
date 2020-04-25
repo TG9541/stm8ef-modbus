@@ -1,26 +1,28 @@
-\ STM8eForth : BF!                                                 TG9541-200424
+\ STM8eForth : BF! and LEBF!                                       TG9541-200424
 \ ------------------------------------------------------------------------------
 
 \ Write bit to a bitfield stored in one or more cells (16 bit words)
 \ Set/reset bit #u (0..8191) in a cell array starting at address a to bool t
 : BF! ( b a n -- ) [
   \ Note: creates/executes BSER/BRES + RET code on Data Stack
-  $9093 ,          \        LDW     Y,X
+  $4B01 ,          \        PUSH    #0x01           ; 1: Big Endian (STM8)
+  HERE \ keep this for LEBF!
+  $9093 ,          \ _BFS:  LDW     Y,X
   $FE C,           \        LDW     X,(X)           ; get bit number
   $9F C,           \        LD      A,XL
   $88 C,           \        PUSH    A               ; keep LSB
   $54 C,           \        SRLW    X               ; 8 \ -> byte offset
   $54 C,           \        SRLW    X
   $54 C,           \        SRLW    X
-  \ The next 3 lines are for Big-Endians, e.g. the designers of the STM8
-  $9F C,           \        LD      A,XL            ; STM8: a Big Endian
-  $A801 ,          \        XOR     A,#1
-  $97 C,           \        LD      XL,A            ; now the MSB comes first
-  $BF46 ,          \        LDW     YTEMP,X         ; bit offset
+  $9F C,           \        LD      A,XL           ; deal with endianness
+  $1802 ,          \        XOR     A,(2,SP)        ; 0: Litte Endian, 1: Big Endian (STM8)
+  $97 C,           \        LD      XL,A
+  $89 C,           \        PUSHW   X               ; bit offset
   $93 C,           \        LDW     X,Y
   $EE02 ,          \        LDW     X,(2,X)
-  $72BB , $0046 ,  \        ADDW    X,YTEMP         ; bit offset + address
+  $72FB , $01 C,   \        ADDW    X,(1,SP)        ; add bit offset to address
   $90EF , $02 C,   \        LDW     (2,Y),X
+  $85 C,           \        POPW    X
   $A672 ,          \        LD      A,#0x72         ; Opcode BSET/BRES
   $90F7 ,          \        LD      (Y),A
   $84 C,           \        POP     A               ; LSB of bit number
@@ -35,8 +37,17 @@
   $E701 ,          \        LD      (1,X),A         ; 2nd byte of BSET/BRES
   $A681 ,          \        LD      A,#EXIT_OPC     ; Opcode RET
   $E704 ,          \        LD      (4,X),A
+  $84 C,           \        POP     A               ; pop endianness marker
   $1C C, $0006 ,   \        ADDW    X,#6
   $90FC ,          \        JP      (Y)
+  OVERT
+
+\ Write bit to a Little Endian bitfield (list of bytes)
+\ Set/reset bit #u (0..8191) in an array starting at address a to bool t
+: LEBF! ( b a n -- ) [
+  $4B00 ,          \     PUSH    #0x00           ; 0: Little Endian
+  HERE
+  $20 C, - 2- C,   \     JRA     _BFS
   OVERT
 
 \\ Example

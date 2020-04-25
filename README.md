@@ -53,7 +53,7 @@ FC | Description | Support
 **4** | **Read Input Registers** | implemented
 **5** | **Write Single Coil** | implemented
 **6** | **Write Single (Holding) Register** | implemented
-15 | Write Multiple Coils | see [issue #19](https://github.com/TG9541/stm8ef-modbus/issues/19)
+**15** | **Write Multiple Coils** | implemented
 16 | Write Multiple Registers | partial
 
 ++: *currently limited to "8bit aligned start address", e.g. 0, 8, 16*

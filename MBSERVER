@@ -26,6 +26,8 @@ WIPE
 $4000 CONSTANT EESTART
 
 NVM  \ compile to Flash memory from here on
+#require BF!
+#require BF@
 
   \ --- FC01 "Read Coils"
 
@@ -129,31 +131,29 @@ NVM  \ compile to Flash memory from here on
     DUP rxbuf + 7 +
   ;RAM ALIAS mbrxd
 
-
-  \ MB range test
-  :NVM  ( u -- f )
-    mbp1 mbp2 + SWAP <
+  \ MB test range mbp1,mbp2 in n
+  :NVM  ( n -- f )
+    mbp1 mbp2 + - 0< NOT
   ;RAM ALIAS mbprange? NVM
-
 
   \ --- FC15 "Write Multiple Coils"
 
   \ FC15 Write Multiple Coils write transfer
   :NVM  ( i -- 1 )
-    ( i ) mbrxd C@ SWAP ( n i )
-    coils + B>L C!   1 ( inc )
-  ;NVM ( xt )
+    ( i ) rxbuf 7 + OVER mbp1 - ( i a i0 ) BF@ SWAP ( b i )
+    coils SWAP ( b a i ) BF!
+    1 ( inc )
+  ;RAM ALIAS FC15ACT NVM
 
   \ FC15 handler
   :NVM  ( -- )
-    COILBYTES mbprange? IF
-      [ ( xt xth ) SWAP ] LITERAL  ( xth xt ) mbloop
+    COILBYTES 8 * mbprange? IF
+      [ ' FC15ACT ] LITERAL ( xt ) mbloop
       MBSWR
     ElSE
       2 MBEC
     THEN
   ;NVM ( xth ) 15 FC>XT !
-
 
   \ --- FC16 "Write Multiple Register"
 
@@ -166,7 +166,7 @@ NVM  \ compile to Flash memory from here on
   \ FC16 handler
   :NVM  ( -- )
     HOLDINGCELLS mbprange? IF
-      [ ( xt1 xt2 ) SWAP ] LITERAL  ( xt ) mbloop
+      [ ( xt1 xt2 ) SWAP ] LITERAL 1 ( xt bpu ) mbloop
       MBSWR
     ElSE
       2 MBEC

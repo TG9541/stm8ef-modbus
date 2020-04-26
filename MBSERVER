@@ -18,8 +18,8 @@ WIPE
 #require ULOCK
 
 \ Compile time symbols
-4 CONSTANT COILBYTES
-2 CONSTANT INPUTCELLS
+4 CONSTANT COILCELLS
+4 CONSTANT INPUTCELLS
 2 CONSTANT HOLDINGCELLS
 
 1024  CONSTANT EECELLS   \ this is the maximum for any STM8 device
@@ -29,39 +29,49 @@ NVM  \ compile to Flash memory from here on
 #require BF!
 #require BF@
 
+
   \ --- FC01 "Read Coils"
 
-  VARIABLE coils COILBYTES 2- ALLOT
+  VARIABLE coils COILCELLS 1- 2* ALLOT
 
-  \ FC01 coils iterated transfer
-  :NVM  ( i -- 8 )
-    8 / coils + B>L C@ txc+   8 ( inc )
-  ;NVM ( xt )
+  \ FC01 Read Coils transfer
+  :NVM  ( i -- )
+    ( i ) coils OVER ( i a i ) BF@
+    ( i b ) SWAP mbp1 - ( b i0 )
+    txbuf 3 + SWAP ( b a i0 ) LEBF!
+  ;RAM ALIAS FC01ACT NVM
 
   \ FC01 handler
   :NVM  ( -- )
-    [ ( xt xth ) SWAP ] LITERAL 1 ( xt bpu ) mbread
-  ;NVM ( xth ) 1 FC>XT !
-
+    [ COILCELLS 16 * ] LITERAL mbrange? IF
+      [ ' FC01ACT ] LITERAL ( xt ) mbrbits
+    THEN
+  ;NVM ( xt ) 1 FC>XT !
 
   \ --- FC02 "Read Discrete Inputs"
 
   VARIABLE inputs INPUTCELLS 1- 2* ALLOT
 
-  \ FC02 input register iterated transfer
-  :NVM  ( i -- 8 )
-    8 / inputs + B>L C@ txc+   8 ( inc )
-  ;NVM ( xt )
+  \ FC02 input register transfer
+  :NVM  ( i -- )
+    ( i ) inputs OVER ( i a i ) BF@
+    ( i b ) SWAP mbp1 - ( b i0 )
+    txbuf 3 + SWAP ( b a i0 ) LEBF!
+  ;RAM ALIAS FC02ACT NVM
 
   \ FC02 handler
   :NVM  ( -- )
-     [ ( xt xth ) SWAP ] LITERAL 1 ( xt bpu ) mbread
-  ;NVM ( xth ) 2 FC>XT !
-
+    [ INPUTCELLS 16 * ] LITERAL mbrange? IF
+      [ ' FC02ACT ] LITERAL ( xt ) mbrbits
+    THEN
+  ;NVM ( xt ) 2 FC>XT !
 
   \ --- FC03 "Read Holding Registers"
 
   VARIABLE holding HOLDINGCELLS 1- 2* ALLOT
+
+  \ dummy
+  : mbread ;
 
   \ FC03 holding register iterated transfer
   :NVM  ( i -- 1 )
@@ -98,11 +108,11 @@ NVM  \ compile to Flash memory from here on
 
   \ --- FC05 handler "Write Single Coil"
   :NVM   ( -- )
-    mbp1 1- ( #b ) DUP 0 [ COILBYTES 8 * ] LITERAL WITHIN IF
+    mbp1 1- ( #b ) DUP 0 [ COILCELLS 16 * ] LITERAL WITHIN IF
       mbp2 $FF00 =
       ( #b f ) coils B>L
       ( #b f a ) ROT ( f a #b ) B!
-      MBSWR   \ single write response
+      MBWR   \ MODBUS write response
     ELSE
       DROP   2 MBEC
     THEN
@@ -115,10 +125,10 @@ NVM  \ compile to Flash memory from here on
       ULOCK
       mbp2 SWAP ( n #r ) 2* EESTART + !
       LOCK
-      MBSWR   \ single write response
+      MBWR   \ MODBUS write response
     ELSE ( #r ) EECELLS - DUP 0 HOLDINGCELLS WITHIN IF
         mbp2 SWAP ( n #r ) 2* holding + !
-        MBSWR   \ single write response
+        MBWR   \ MODBUS write response
       ELSE
         DROP   2 MBEC
       THEN
@@ -131,46 +141,35 @@ NVM  \ compile to Flash memory from here on
     DUP rxbuf + 7 +
   ;RAM ALIAS mbrxd
 
-  \ MB test range mbp1,mbp2 in n
-  :NVM  ( n -- f )
-    mbp1 mbp2 + - 0< NOT
-  ;RAM ALIAS mbprange? NVM
-
   \ --- FC15 "Write Multiple Coils"
 
   \ FC15 Write Multiple Coils write transfer
-  :NVM  ( i -- 1 )
+  :NVM  ( i -- )
     ( i ) rxbuf 7 + OVER mbp1 - ( i a i0 ) LEBF@ SWAP ( b i )
     coils SWAP ( b a i ) BF!
-    1 ( inc )
-  ;RAM ALIAS FC15ACT NVM
+  ;RAM ALIAS FC15ACT
 
   \ FC15 handler
   :NVM  ( -- )
-    COILBYTES 8 * mbprange? IF
+    [ COILCELLS 16 * ] LITERAL mbrange? IF
       [ ' FC15ACT ] LITERAL ( xt ) mbloop
-      MBSWR
-    ElSE
-      2 MBEC
+      MBWR   \ MODBUS write response
     THEN
   ;NVM ( xth ) 15 FC>XT !
 
   \ --- FC16 "Write Multiple Register"
 
   \ FC16 holding register write transfer
-  :NVM  ( i -- 1 )
+  :NVM  ( i -- )
     ( i ) 2* mbrxd @ SWAP ( n 2i )
-    holding + !   1 ( inc )
-  ;NVM ( xt )
+    holding + !
+  ;RAM ALIAS FC16ACT
 
   \ FC16 handler
   :NVM  ( -- )
-    HOLDINGCELLS mbprange? IF
-      [ ( xt1 xt2 ) SWAP ] LITERAL 1 ( xt bpu ) mbloop
-      MBSWR
-    ElSE
-      2 MBEC
-    THEN
+    HOLDINGCELLS mbrange? IF
+      [ ' FC16ACT ] LITERAL ( xt ) mbloop
+      MBWR   \ MODBUS write response
   ;NVM ( xt ) 16 FC>XT !
 
   \ Registration of FC handlers complete

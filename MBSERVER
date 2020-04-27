@@ -29,52 +29,48 @@ NVM  \ compile to Flash memory from here on
 #require BF!
 #require BF@
 
+  VARIABLE coils   COILCELLS    1- 2* ALLOT
+  VARIABLE inputs  INPUTCELLS   1- 2* ALLOT
+  VARIABLE holding HOLDINGCELLS 1- 2* ALLOT
 
   \ --- FC01 "Read Coils"
-
-  VARIABLE coils COILCELLS 1- 2* ALLOT
 
   \ FC01 Read Coils transfer
   :NVM  ( i -- )
     ( i ) coils OVER ( i a i ) BF@
     ( i b ) SWAP mbp1 - ( b i0 )
     txbuf 3 + SWAP ( b a i0 ) LEBF!
-  ;RAM ALIAS FC01ACT NVM
+  ;RAM ALIAS FC01ACT
 
   \ FC01 handler
   :NVM  ( -- )
     [ COILCELLS 16 * ] LITERAL mbrange? IF
-      [ ' FC01ACT ] LITERAL ( xt ) mbrbits
+      [ ' FC01ACT ] LITERAL 1 ( xt bpu ) mbread
     THEN
   ;NVM ( xt ) 1 FC>XT !
 
   \ --- FC02 "Read Discrete Inputs"
 
-  VARIABLE inputs INPUTCELLS 1- 2* ALLOT
 
   \ FC02 input register transfer
   :NVM  ( i -- )
     ( i ) inputs OVER ( i a i ) BF@
     ( i b ) SWAP mbp1 - ( b i0 )
     txbuf 3 + SWAP ( b a i0 ) LEBF!
-  ;RAM ALIAS FC02ACT NVM
+  ;RAM ALIAS FC02ACT
 
   \ FC02 handler
   :NVM  ( -- )
     [ INPUTCELLS 16 * ] LITERAL mbrange? IF
-      [ ' FC02ACT ] LITERAL ( xt ) mbrbits
+      [ ' FC02ACT ] LITERAL 1 ( xt bpu ) mbread
     THEN
   ;NVM ( xt ) 2 FC>XT !
 
   \ --- FC03 "Read Holding Registers"
 
-  VARIABLE holding HOLDINGCELLS 1- 2* ALLOT
-
-  \ dummy
-  : mbread ;
 
   \ FC03 holding register iterated transfer
-  :NVM  ( i -- 1 )
+  :NVM  ( i -- )
     ( i ) DUP 0 EECELLS WITHIN IF
       2* EESTART + @
     ELSE
@@ -83,8 +79,7 @@ NVM  \ compile to Flash memory from here on
       ELSE
         ( i ) DROP 0
       THEN
-    THEN
-    tx+   1 ( inc )
+    THEN   tx+
   ;NVM ( xt )
 
   \ FC03 handler
@@ -96,8 +91,9 @@ NVM  \ compile to Flash memory from here on
   \ --- FC04 "Read Input Registers"
 
   \ FC04 input register iterated transfer
-  :NVM  ( i -- 1 )
-    2* inputs + @ tx+   1 ( inc )
+  :NVM  ( i -- )
+    2* inputs + @
+    tx+
   ;NVM ( xt )
 
   \ FC04 handler

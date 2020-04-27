@@ -39,7 +39,7 @@ It's easy to build custom targets, e.g. using the $0.80 [MINDEV board](https://g
 
 ![MINDEV](https://camo.githubusercontent.com/82bd480f176951de9a469e134f543a6570f48597/68747470733a2f2f616530312e616c6963646e2e636f6d2f6b662f485442314e6642615056585858586263587058587136785846585858362f357063732d6c6f742d53544d3853313033463350362d73797374656d2d626f6172642d53544d38532d53544d382d646576656c6f706d656e742d626f6172642d6d696e696d756d2d636f72652d626f6172642e6a70675f323230783232302e6a7067)
 
-When using PB5 for RS485 direction control (-> `BUSCTRL`) the C0135 code can be used unchanged.
+When using PB5 for RS485 direction control (-> `BUSCTRL`) the C0135 code can be used (refer to the [C0135 STM8 eForth Wiki page][C0135]).
 
 ## Supported MODBUS Function Codes
 
@@ -47,10 +47,10 @@ When using PB5 for RS485 direction control (-> `BUSCTRL`) the C0135 code can be 
 
 FC | Description | Support
 -|-|-
-**1**| **Read Coils** | implemented
+**1** | **Read Coils** | implemented
 **2** | **Read Discrete Inputs** | implemented
-3 | Read Holding Registers | partial
-4 | Read Input Registers | partial
+**3** | **Read Holding Registers** | implemented 
+**4** | **Read Input Registers** | implemented
 **5** | **Write Single Coil** | implemented
 **6** | **Write Single (Holding) Register** | implemented
 **15** | **Write Multiple Coils** | implemented

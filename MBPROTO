@@ -73,6 +73,13 @@ NVM
     1- 2* ( [ tab ] ) LITERAL +
   ;
 
+  \ true if n in range mbp1,mbp2, else false and MODBUS EC=2
+  : mbrange? ( n -- b )
+    -1 SWAP mbp1 mbp2 + - 0< IF
+      2 MBEC NOT
+    THEN
+  ;
+
   \ MB loop (xt) from mbp1 to mbp1+mbp2
   : mbloop ( xt -- )
     mbp1 mbp2 OVER + SWAP  DO
@@ -81,22 +88,16 @@ NVM
     ( xt ) DROP
   ;
 
-  \ true if n in range mbp1,mbp2, else false and MODBUS EC=2
-  : mbrange? ( n -- b )
-    -1 SWAP mbp1 mbp2 + - 0< IF
-      2 MBEC NOT
+  \ MB looped bit read with action xt, build response (FC01, FC02, FC03, FC04)
+  : mbread ( xt bpu -- )
+    ( xt bpu ) DUP mbp2 * ( bpu bits )
+    \ N* as "quantity of bits / 8, if the remainder is different of 0 => N=N+1"
+    ( bits ) 1- 8 / 1+ ( N* ) DUP txc+
+    ( bpu N* ) SWAP ( bpu ) 1 = IF
+       ( N* ) 1- FOR 0 txc+ NEXT  \ init bytes in response with 0
+    ELSE
+       ( N* ) DROP  \ not a bitfield, no memory init
     THEN
-  ;
-
-  \ Quantity of bits / 8, if the remainder is different of 0 => N = N+1
-  : N* ( -- N* )
-    1- 8 / 1+
-  ;
-
-  \ MB looped bit read with action xt, build response (FC01, FC02)
-  : mbrbits ( xt -- )
-    ( xt ) mbp2 N* DUP txc+       \ response: number of bytes
-    ( xt N* ) 1- FOR 0 txc+ NEXT  \ init packed bits in response with 0
     ( xt ) mbloop
   ;
 

@@ -39,7 +39,6 @@ RAM WIPE
 NVM
 
   \ Start UART TX ISR chain
-
   : send ( -- )
     BUStx                  \ enable TX driver
     txbuf txp !              \ next char: buffer start
@@ -51,11 +50,16 @@ NVM
     txbuf tbp !
   ;
 
+  \ get current transmit buffe
+  : ctx ( -- a )
+    tbp @
+  ;
+
   \ TX ISR handler
   :NVM
     SAVEC
     \ P2H
-    txp DUP @ ( va a1 ) DUP tbp @ < IF
+    txp DUP @ ( va a1 ) DUP ctx < IF
       ( va a1 ) C@ UART1_DR C!
       ( va ) 1 SWAP +!
     ELSE
@@ -73,9 +77,9 @@ NVM
     IRET
   [ OVERT INT_UARTTX !
 
-  \ headerless: test for enough free space in txbuf for putting n bytes
+  \ test if there is enough free space in txbuf for putting n bytes
   :NVM  ( n -- f )
-    tbp @ txbuf - + 1- TXLEN <
+    ctx txbuf - + 1- TXLEN <
   ;RAM ALIAS test-tbp NVM
 
   \ RX ISR handler
@@ -101,14 +105,14 @@ NVM
   \ add c to TX buffer
   : txc+ ( c -- )
     1 test-tbp IF
-      tbp @ C! 1 tbp +!
+      ctx C! 1 tbp +!
     THEN
   ;
 
   \ add n to TX buffer
   : tx+ ( n -- )
     2 test-tbp IF
-      tbp @ ! 2 tbp +!
+      ctx ! 2 tbp +!
     THEN
   ;
 
@@ -153,7 +157,7 @@ WIPE RAM
     CR ."  rxbuf:"
     rxbuf rxp @ OVER - DUP . DUMP
     CR ."  txbuf:"
-    txbuf tbp @ OVER - DUP . DUMP
+    txbuf ctx OVER - DUP . DUMP
   ;
 
 2 UARTISR

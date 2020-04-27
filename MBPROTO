@@ -33,8 +33,8 @@ NVM
     rxbuf 4 + @
   ;
 
-  \ MODBUS single write response (e.g FC05, FC06)
-  : MBSWR  ( -- )
+  \ MODBUS write response (e.g FC05, FC06, FC15, FC16)
+  : MBWR  ( -- )
     mbp1 tx+ mbp2 tx+  \ copy 1st and 2nd parameter
   ;
 
@@ -73,18 +73,31 @@ NVM
     1- 2* ( [ tab ] ) LITERAL +
   ;
 
-  \ process MB  loop in (xt), steps from mbp1 to mbp1+mbp2
+  \ MB loop (xt) from mbp1 to mbp1+mbp2
   : mbloop ( xt -- )
     mbp1 mbp2 OVER + SWAP  DO
-      ( xt ) I OVER EXECUTE ( inc )
-    +LOOP
-    DROP
+      ( xt ) I OVER EXECUTE
+    LOOP
+    ( xt ) DROP
   ;
 
-  \ MB looped read action (xt) with bpu bit per increment
-  : mbread ( xt bpu -- )
-    mbp2 * 1- 8 / 1+ txc+
-    ( xt bpu ) mbloop
+  \ true if n in range mbp1,mbp2, else false and MODBUS EC=2
+  : mbrange? ( n -- b )
+    -1 SWAP mbp1 mbp2 + - 0< IF
+      2 MBEC NOT
+    THEN
+  ;
+
+  \ Quantity of bits / 8, if the remainder is different of 0 => N = N+1
+  : N* ( -- N* )
+    1- 8 / 1+
+  ;
+
+  \ MB looped bit read with action xt, build response (FC01, FC02)
+  : mbrbits ( xt -- )
+    ( xt ) mbp2 N* DUP txc+       \ response: number of bytes
+    ( xt N* ) 1- FOR 0 txc+ NEXT  \ init packed bits in response with 0
+    ( xt ) mbloop
   ;
 
   \ MODBUS protocol handler
@@ -97,9 +110,9 @@ NVM
       ( crc-ok ) IF
         mbnode @ rxbuf C@ = IF  \ node address match
           mbpre @?EXEC    \ preparation handler, e.g. read inputs
-          rxbuf    C@     txc+
-          rxbuf 1+ C@ DUP txc+  ( fc )
-          DUP 1 17 WITHIN IF
+          rxbuf    C@     txc+  \ write Node-ID
+          rxbuf 1+ C@ DUP txc+  \ write FC
+          ( fc ) DUP 1 17 WITHIN IF
              FC>XT @?EXEC \ get and execute FC handler
           ELSE
             FCDEF         \ default handler

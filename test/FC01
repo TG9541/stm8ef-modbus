@@ -1,0 +1,65 @@
+\ Minimal MODBUS server with FC01 "Read Coils" handler
+\ Features:
+\ - prints debug infos to the console
+\ - interactive tests from the console, e.g. set coils manually "7 coils !"
+
+\ check if the MODBUS protocol core is already present
+\ hint: the development cycle will be faster if you PERSIST it
+#require MBPROTO
+
+\ Resetting the FC handler table can be helpful for development
+#require WIPE
+#require MBRESET
+MBRESET   \ Reset the MODBUS Function Code table
+
+#require ALIAS
+#require :NVM
+#require 'IDLE
+#require .OK
+
+NVM
+
+#require MBDUMP
+#require BF!
+#require BF@
+  
+  8 CONSTANT COILBYTES
+  VARIABLE coils COILBYTES 2- ALLOT
+
+  \ FC01 Read Coils transfer
+  :NVM  ( i -- )
+    DUP .
+    ( i ) coils OVER ( i a i ) BF@
+    ( i b ) SWAP mbp1 - ( b i0 )
+    DUP . CR
+    txbuf 3 + SWAP ( b a i0 ) LEBF!
+  ;RAM ALIAS FC01ACT NVM
+
+  \ FC01 handler
+  :NVM  ( -- )
+    \ write register address and value to the console
+    ." Read coil bits: A:" mbp1 . ."  Q:" mbp2 . CR
+    ." bits to coils end:" COILBYTES 8 * mbp1 mbp2 + - . CR
+
+    COILBYTES 8 * mbrange? IF
+      [ ' FC01ACT ] LITERAL ( xt ) mbrbits
+    THEN
+  ;NVM ( xt ) 1 FC>XT !
+
+  \ custom default action handler
+  : showfc ( -- )
+    rxbuf C@ ." FC:" . CR
+    1 MBEC  \ set error code
+  ;
+
+  : init ( -- )
+    0 UARTISR                     \ init UART handler w/ default baud rate
+    1 mbnode !                    \ set node address
+    [ ' showfc ] LITERAL mbdef !  \ FC default action (optional feature)
+    [ ' MBDUMP ] LITERAL mbact !  \ show buffers (debug demo)
+    [ ' MBPROTO ] LITERAL 'IDLE ! \ run MB protocol handler as idle task
+    .OK
+  ;
+
+  ' init 'BOOT !
+WIPE RAM

@@ -1,0 +1,69 @@
+\ Minimal MODBUS server with FC15 "Write Multiple Coils" handler
+\ Features:
+\ - prints debug infos to the console
+\ - interactive tests from the console with, e.g. "coils 10 DUMP"
+
+\ check if the MODBUS protocol core is already present
+\ hint: the development cycle will be faster if you PERSIST it
+#require MBPROTO
+
+\ Resetting the FC handler table can be helpful for development
+#require WIPE
+#require MBRESET
+MBRESET   \ Reset the MODBUS Function Code table
+
+#require ALIAS
+#require :NVM
+#require 'IDLE
+#require .OK
+
+NVM
+
+#require MBDUMP
+#require BF!
+#require BF@
+  
+  8 CONSTANT COILBYTES
+  VARIABLE coils COILBYTES 2- ALLOT
+
+  \ --- FC15 "Write Multiple Coils"
+
+  \ FC15 Write Multiple Coils write transfer
+  :NVM  ( i -- )
+    \ uncomment "DUP ." lines to check index (this can cause a timeout)
+    \ DUP . 
+    ( i ) rxbuf 7 + OVER mbp1 - ( i a i0 )
+    \ DUP . CR
+    LEBF@ SWAP ( b i )
+    coils SWAP ( b a i ) BF!  
+  ;RAM ALIAS FC15ACT NVM
+
+  \ FC15 handler
+  :NVM  ( -- )
+    \ write register address and value to the console
+    ." Write register: A:" mbp1 . ."  Q:" mbp2 . CR
+    ." Write bits from end:" COILBYTES 8 * mbp1 mbp2 + - . CR
+
+    COILBYTES 8 * mbrange? IF
+      [ ' FC15ACT ] LITERAL ( xt ) mbloop
+      MBWR   \ MODBUS write response
+    THEN
+  ;NVM ( xth ) 15 FC>XT !
+
+  \ custom default action handler
+  : showfc ( -- )
+    rxbuf C@ ." FC:" . CR
+    1 MBEC  \ set error code
+  ;
+
+  : init ( -- )
+    0 UARTISR                     \ init UART handler w/ default baud rate
+    1 mbnode !                    \ set node address
+    [ ' showfc ] LITERAL mbdef !  \ FC default action (optional feature)
+    [ ' MBDUMP ] LITERAL mbact !  \ show buffers (debug demo)
+    [ ' MBPROTO ] LITERAL 'IDLE ! \ run MB protocol handler as idle task
+    .OK
+  ;
+
+  ' init 'BOOT !
+WIPE RAM

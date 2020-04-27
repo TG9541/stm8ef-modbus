@@ -47,16 +47,14 @@ When using PB5 for RS485 direction control (-> `BUSCTRL`) the C0135 code can be 
 
 FC | Description | Support
 -|-|-
-**1**| **Read Coils** | implemented ++
-**2** | **Read Discrete Inputs** | implemented ++
-**3** | **Read Holding Registers** | implemented (variables or EEPROM)
-**4** | **Read Input Registers** | implemented
+**1**| **Read Coils** | implemented
+**2** | **Read Discrete Inputs** | implemented
+3 | Read Holding Registers | partial
+4 | Read Input Registers | partial
 **5** | **Write Single Coil** | implemented
 **6** | **Write Single (Holding) Register** | implemented
 **15** | **Write Multiple Coils** | implemented
 16 | Write Multiple Registers | partial
-
-++: *currently limited to "8bit aligned start address", e.g. 0, 8, 16*
 
 A working example with Node-ID and Baud Rate stored in EEPROM is implemented in `C0135/board.fs`. An example that shows how to develop minimal servers with FC handlers from scratch using the Forth console is in `main.fs`.
 

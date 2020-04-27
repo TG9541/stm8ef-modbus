@@ -1,7 +1,7 @@
-\ Minimal MODBUS server with FC15 "Write Multiple Coils" handler
+\ Minimal MODBUS server with FC04 "Read Input Registers" handler
 \ Features:
 \ - prints debug infos to the console
-\ - interactive tests from the console with, e.g. "coils 10 DUMP"
+\ - interactive tests from the console, e.g. set inputs manually "7 inputs !"
 
 \ check if the MODBUS protocol core is already present
 \ hint: the development cycle will be faster if you PERSIST it
@@ -23,32 +23,25 @@ NVM
 #require BF!
 #require BF@
 
-  4 CONSTANT COILCELLS
-  VARIABLE coils COILCELLS 1- 2* ALLOT
+  4 CONSTANT INPUTCELLS
+  VARIABLE inputs INPUTCELLS 1- 2* ALLOT
 
-  \ --- FC15 "Write Multiple Coils"
+  \ --- FC04 "Read Input Registers"
 
-  \ FC15 Write Multiple Coils write transfer
-  :NVM  ( i -- )
-    \ uncomment "DUP ." lines to check index (this can cause a timeout)
+  \ FC04 input register iterated transfer
+  :NVM  ( i -- 1 )
     DUP .
-    ( i ) rxbuf 7 + OVER mbp1 - ( i a i0 )
-    DUP . CR
-    LEBF@ SWAP ( b i )
-    coils SWAP ( b a i ) BF!
-  ;RAM ALIAS FC15ACT NVM
+    2* inputs + @ tx+
+  ;NVM ( xt )
 
-  \ FC15 handler
+  \ FC04 handler
   :NVM  ( -- )
     \ write register address and value to the console
-    ." Write register: A:" mbp1 . ."  Q:" mbp2 . CR
-    ." Write bits from end:" COILCELLS 16 * mbp1 mbp2 + - . CR
+    ." Read input registers: A:" mbp1 . ."  Q:" mbp2 . CR
 
-    COILCELLS 16 * mbrange? IF
-      [ ' FC15ACT ] LITERAL ( xt ) mbloop
-      MBWR   \ MODBUS write response
-    THEN
-  ;NVM ( xth ) 15 FC>XT !
+     [ ( xt xth ) SWAP ] LITERAL 16 ( xt bpu ) mbread
+  ;NVM ( xth ) 4 FC>XT !
+
 
   \ custom default action handler
   : showfc ( -- )

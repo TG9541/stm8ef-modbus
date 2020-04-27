@@ -22,9 +22,9 @@ NVM
 #require MBDUMP
 #require BF!
 #require BF@
-  
-  8 CONSTANT COILBYTES
-  VARIABLE coils COILBYTES 2- ALLOT
+
+  4 CONSTANT COILCELLS
+  VARIABLE coils COILCELLS 1- 2* ALLOT
 
   \ FC01 Read Coils transfer
   :NVM  ( i -- )
@@ -39,10 +39,10 @@ NVM
   :NVM  ( -- )
     \ write register address and value to the console
     ." Read coil bits: A:" mbp1 . ."  Q:" mbp2 . CR
-    ." bits to coils end:" COILBYTES 8 * mbp1 mbp2 + - . CR
+    ." bits to coils end:" COILCELLS 16 * mbp1 mbp2 + - . CR
 
-    COILBYTES 8 * mbrange? IF
-      [ ' FC01ACT ] LITERAL ( xt ) mbrbits
+    COILCELLS 16 * mbrange? IF
+      [ ' FC01ACT ] LITERAL 1 ( xt bpu ) mbread
     THEN
   ;NVM ( xt ) 1 FC>XT !
 

@@ -1,0 +1,59 @@
+\ Minimal MODBUS server with FC05 "Write Single Coil" handler
+\ Features:
+\ - prints debug infos to the console
+\ - interactive tests from the console with, e.g. "coils 10 DUMP"
+
+\ check if the MODBUS protocol core is already present
+\ hint: the development cycle will be faster if you PERSIST it
+#require MBPROTO
+
+\ Resetting the FC handler table can be helpful for development
+#require WIPE
+#require MBRESET
+MBRESET   \ Reset the MODBUS Function Code table
+
+#require ALIAS
+#require :NVM
+#require 'IDLE
+#require .OK
+
+NVM
+
+#require MBDUMP
+#require BF!
+
+  4 CONSTANT COILCELLS
+  VARIABLE coils COILCELLS 1- 2* ALLOT
+
+  \ --- FC05 handler "Write Single Coil"
+  :NVM   ( -- )
+    \ write register address and value to the console
+    ." Write register: A:" mbp1 . ."  F:" mbp2 . CR
+
+    mbp1 ( #b ) DUP 0 [ COILCELLS 16 * ] LITERAL WITHIN IF
+      mbp2 $FF00 =
+      ( #b f ) coils
+      ( #b f a ) ROT ( f a #b ) BF!
+      MBWR   \ MODBUS write response
+    ELSE
+      DROP   2 MBEC
+    THEN
+  ;NVM ( xth ) 5 FC>XT !
+
+  \ custom default action handler
+  : showfc ( -- )
+    rxbuf C@ ." FC:" . CR
+    1 MBEC  \ set error code
+  ;
+
+  : init ( -- )
+    0 UARTISR                     \ init UART handler w/ default baud rate
+    1 mbnode !                    \ set node address
+    [ ' showfc ] LITERAL mbdef !  \ FC default action (optional feature)
+    [ ' MBDUMP ] LITERAL mbact !  \ show buffers (debug demo)
+    [ ' MBPROTO ] LITERAL 'IDLE ! \ run MB protocol handler as idle task
+    .OK
+  ;
+
+  ' init 'BOOT !
+WIPE RAM

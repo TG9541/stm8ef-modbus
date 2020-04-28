@@ -70,7 +70,7 @@ Please refer to the [Installation Instructions](https://github.com/TG9541/stm8ef
 
 ## Console
 
-While MODBUS communication uses the STM8S UART, the Forth console communicates through a half-duplex simulated RS232 interface through the `PD1/SWIM` GPIO pin (and a diode). This is made possible by the SWIMCOM STM8 eForth "stock binary" which the makefile pulls from the STM8 eForth Releases. Other CLI communication options, e.g. using simulated full-duplex RxD-TxD lines, require building a custom STM8 eForth binary. It's also possible to use an STM8S High Density device with two UARTs like the STM8S207RBT6.
+The STM8S UART is used by [UARTISR](https://github.com/TG9541/stm8ef-modbus/blob/master/UARTISR) for MODBUS RTU communication. The Forth console communicates through a half-duplex simulated RS232 two-wire interface on the `PD1/SWIM` GPIO pin. For adding a standard USB-TTL converter only a diode is needed. Other CLI communication options are easy to implment, e.g. using simulated full-duplex RxD-TxD lines (e.g. using PA1 and PA2 after removing the C0135 8MHz crystal). It's also possible to use an STM8S High Density device with two UARTs, e.g. the STM8S207RBT6.
 
 Please refer to the [STM8 eForth Wiki](https://github.com/TG9541/stm8ef/wiki/STM8S-Value-Line-Gadgets#other-target-boards) to learn more about half-duplex CLI communication options and preferred terminal programs.
 

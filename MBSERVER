@@ -104,10 +104,10 @@ NVM  \ compile to Flash memory from here on
 
   \ --- FC05 handler "Write Single Coil"
   :NVM   ( -- )
-    mbp1 1- ( #b ) DUP 0 [ COILCELLS 16 * ] LITERAL WITHIN IF
+    mbp1 ( #b ) DUP 0 [ COILCELLS 16 * ] LITERAL WITHIN IF
       mbp2 $FF00 =
-      ( #b f ) coils B>L
-      ( #b f a ) ROT ( f a #b ) B!
+      ( #b f ) coils
+      ( #b f a ) ROT ( f a #b ) BF!
       MBWR   \ MODBUS write response
     ELSE
       DROP   2 MBEC

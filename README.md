@@ -25,8 +25,9 @@ After that you should be ready to test the MODBUS connection (here is an example
 
 ![image](https://user-images.githubusercontent.com/5466977/80449110-8ca6fe80-891e-11ea-9f99-8d6adf6b5160.png)
 
-This project doesn't just provide a better MODBUS RTU firmware for the relay board but it also turns it into something more: using a diode and a cheap USB-TTL dongle you can [get a console][TWOWIRE] (this means the MODBUS node *is* a computer, a bit like the console of a VIC20 in the old days ;-) ):
-![image](https://user-images.githubusercontent.com/5466977/80793332-224cc300-8b97-11ea-89f5-065fce7aa0f0.png)
+This project doesn't just provide a better MODBUS RTU firmware for the relay board but it also turns it into something more: using a diode and a cheap USB-TTL dongle you can [get a console][TWOWIRE]. This means the MODBUS node *is* a computer, a bit like the console of a VIC20 in the old days:
+
+![image](https://user-images.githubusercontent.com/5466977/80796849-917ae500-8ba0-11ea-843b-96307026f7a8.png)
 
 Using the Forth programming language and the STM8 eForth Background Task it's very program local control features, e.g. a window blinds controller that reacts on local inputs without noticable lag and that communicates with a home-automation controller through "holding" registers.
 

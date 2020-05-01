@@ -37,7 +37,7 @@ NVM  \ compile to Flash memory from here on
   : hmap ( i -- b a )
     DUP 60000 U< IF
       \ limit to last holding register cell
-      ( i ) [ HOLDINGCELLS 1- ] LITERAL MAX
+      ( i ) [ HOLDINGCELLS 1- ] LITERAL MIN
       ( iH ) 2* holding +  0  ( a 0 )  \ flag RAM
     ELSE
       ( i ) 60000 -

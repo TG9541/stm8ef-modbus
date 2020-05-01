@@ -33,6 +33,32 @@ NVM  \ compile to Flash memory from here on
   VARIABLE inputs  INPUTCELLS   1- 2* ALLOT
   VARIABLE holding HOLDINGCELLS 1- 2* ALLOT
 
+  \ map holding index to EEPROM or holding variable
+  : hmap ( i -- b a )
+    DUP 60000 U< IF
+      \ limit to last holding register cell
+      ( i ) [ HOLDINGCELLS 1- ] LITERAL MAX
+      ( iH ) 2* holding +  0  ( a 0 )  \ flag RAM
+    ELSE
+      ( i ) 60000 -
+      ( iEE ) [ EECELLS 1- ] LITERAL MIN
+      ( iEE ) 2* EESTART + 1  ( a 1 )  \ flag EEPROM
+    THEN
+    SWAP ( b a )
+  ;
+
+  \ write to a holding register using hmap, take care of EEPROM
+  : hwrite ( i n -- )
+    >R ( i ) hmap ( b a ) OVER ( b ) IF
+      ULOCK
+    THEN
+    R> ( b a n ) SWAP  !
+    ( b ) IF
+      LOCK
+    THEN
+  ;
+
+
   \ --- FC01 "Read Coils"
 
   \ FC01 Read Coils transfer
@@ -49,8 +75,8 @@ NVM  \ compile to Flash memory from here on
     THEN
   ;NVM ( xt ) 1 FC>XT !
 
-  \ --- FC02 "Read Discrete Inputs"
 
+  \ --- FC02 "Read Discrete Inputs"
 
   \ FC02 input register transfer
   :NVM  ( i -- )
@@ -66,20 +92,13 @@ NVM  \ compile to Flash memory from here on
     THEN
   ;NVM ( xt ) 2 FC>XT !
 
-  \ --- FC03 "Read Holding Registers"
 
+  \ --- FC03 "Read Holding Registers"
 
   \ FC03 holding register iterated transfer
   :NVM  ( i -- )
-    ( i ) DUP 0 EECELLS WITHIN IF
-      2* EESTART + @
-    ELSE
-      ( i ) EECELLS - DUP 0 HOLDINGCELLS WITHIN IF
-        2* holding + @
-      ELSE
-        ( i ) DROP 0
-      THEN
-    THEN   tx+
+    ( i ) hmap ( b a ) NIP  \ discard ULOCK flag
+     ( a ) @ tx+
   ;NVM ( xt )
 
   \ FC03 handler
@@ -117,25 +136,10 @@ NVM  \ compile to Flash memory from here on
 
   \ --- FC06 handler "Write Single Register"
   :NVM   ( -- )
-    mbp1 ( #r ) DUP 0 EECELLS WITHIN IF
-      ULOCK
-      mbp2 SWAP ( n #r ) 2* EESTART + !
-      LOCK
-      MBWR   \ MODBUS write response
-    ELSE ( #r ) EECELLS - DUP 0 HOLDINGCELLS WITHIN IF
-        mbp2 SWAP ( n #r ) 2* holding + !
-        MBWR   \ MODBUS write response
-      ELSE
-        DROP   2 MBEC
-      THEN
-    THEN
+    mbp1 mbp2 ( i n ) hwrite
+    MBWR   \ MODBUS write response
   ;NVM ( xth ) 6 FC>XT !
 
-
-  \ MB read rxbuf payload data
-  :NVM  ( i -- i a )
-    DUP rxbuf + 7 +
-  ;RAM ALIAS mbrxd
 
   \ --- FC15 "Write Multiple Coils"
 
@@ -153,12 +157,17 @@ NVM  \ compile to Flash memory from here on
     THEN
   ;NVM ( xth ) 15 FC>XT !
 
+
   \ --- FC16 "Write Multiple Register"
+
+  \ MB read PDU RX data using register index
+  :NVM  ( i -- n )
+    mbp1 - 2* rxbuf + 7 + @
+  ;RAM ALIAS mbrxd
 
   \ FC16 holding register write transfer
   :NVM  ( i -- )
-    ( i ) 2* mbrxd @ SWAP ( n 2i )
-    holding + !
+    ( i ) DUP mbrxd ( i n ) hwrite
   ;RAM ALIAS FC16ACT
 
   \ FC16 handler
@@ -169,7 +178,6 @@ NVM  \ compile to Flash memory from here on
   ;NVM ( xt ) 16 FC>XT !
 
   \ Registration of FC handlers complete
-
   \ A dumy word for #require
   : MBSERVER ( -- )
   ;

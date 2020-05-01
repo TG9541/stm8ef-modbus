@@ -3,8 +3,6 @@
 
 This repository provides a lightweight MODBUS RTU implementation with [STM8 eForth](https://github.com/TG9541/stm8ef/wiki) for "wired" control nodes, e.g. for home automation. The main target is low-cost STM8S 8bit µCs like the STM8S003F3P6 with 8K Flash and 1K RAM.
 
-The MODBUS I/O Node implementation for the low-cost [C0135 4-Relay RTU module][C0135] serves as a demonstrator, and in [GitHub Releases](https://github.com/TG9541/stm8ef-modbus/releases) you'll find a ready-to-use binary.
-
 Using STM8 Forth for MODBUS has some advantages: the implementation is very compact and it gives applications access to many advanced architecture features like "I/O-locic execution in the background" or a CLI (command line interface).
 
 The Forth compiler/interpreter is part of the binary you can literally change the code while your board is communicating with the MODBUS host!
@@ -14,15 +12,16 @@ The MODBUS RTU implementation covers basic FCs: it's a subset of [MODBUS V1.1b](
 ## Supported Boards
 
 ### C0135 4-Relay Board
-The [C0135 board][C0135] is the default target.
+
+The MODBUS I/O Node implementation for the low-cost [C0135 4-Relay RTU module][C0135] is the default target and it serves as a demonstrator, and in [GitHub Releases](https://github.com/TG9541/stm8ef-modbus/releases) you'll find the ready-to-use binary (look for `out/C0135/C135-forth.ihx` in `stm8ef-bin.zip`).
 
 [C0135]: https://github.com/TG9541/stm8ef/wiki/Board-C0135
 
 ![c0135-small](https://user-images.githubusercontent.com/5466977/52519844-fb3c6580-2c61-11e9-8f36-5a031338e6e5.png)
 
-You can simply transfer the ready-made binary to your board with a cheap "ST-LINK V2" dongle, or run `make` to flash the STM8 eForth C0135 code.
+You can simply transfer the ready-made binary to your board with a cheap "ST-LINK V2" dongle, or run `make` to flash the STM8 eForth C0135 code. After flashing you need to hold the board key `S2` (the one next to the power connector) while pressing the reset key `S1`. The LED next to `S1` flashing confirms that the Node-ID is now 1 and the baud rate 9600 baud.
 
-Using a diode and a cheap USB-TTL dongle you can [get a console][TWOWIRE] (this means the MODBUS node *is* a computer, a bit like the console of a VIC20 in the old days ;-) ).
+This project doesn't just provide a better MODBUS RTU firmware for the relay board but it also turns it into something more: using a diode and a cheap USB-TTL dongle you can [get a console][TWOWIRE] (this means the MODBUS node *is* a computer, a bit like the console of a VIC20 in the old days ;-) ).
 
 [TWOWIRE]: https://github.com/TG9541/stm8ef/wiki/STM8-eForth-Programming-Tools#using-a-serial-interface-for-2-wire-communication
 
@@ -49,14 +48,26 @@ FC | Description | Support
 -|-|-
 **1** | **Read Coils** | implemented
 **2** | **Read Discrete Inputs** | implemented
-**3** | **Read Holding Registers** | implemented 
+**3** | **Read Holding Registers** | implemented
 **4** | **Read Input Registers** | implemented
 **5** | **Write Single Coil** | implemented
 **6** | **Write Single (Holding) Register** | implemented
 **15** | **Write Multiple Coils** | implemented
-16 | Write Multiple Registers | partial
+**16** | **Write Multiple Registers** | implemented
 
-A working example with Node-ID and Baud Rate stored in EEPROM is implemented in `C0135/board.fs`. An example that shows how to develop minimal servers with FC handlers from scratch using the Forth console is in `main.fs`.
+A working example with Node-ID and Baud Rate stored in EEPROM is implemented in `C0135/board.fs`. An example that shows how to develop minimal servers with FC handlers from scratch using the Forth console is in `main.fs` and, for different FCs, in the folder [test](https://github.com/TG9541/stm8ef-modbus/tree/master/test).
+
+Note that there is an experimental mapping of holding registers: holding register addresses from 60000 are mapped to the EEPROM. The mapping can be changed in the future (community input on how to deal with MODBUS style register mapping is welcome).
+
+For FC03, FC06 and FC15 the MODBUS address mapping is currently as follows:
+
+MB address|register MODBUS|Forth
+-|-|-
+0|holding 1|holding
+1 .. 59999|holding 2|holding 2+
+60000|node ID|$4000
+60001|baud rate|$4002
+60002 .. 60319|user EEPROM|$4004 - $43FE STM8S EEPROM
 
 ## Installation
 

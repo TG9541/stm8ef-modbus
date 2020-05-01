@@ -65,7 +65,7 @@ NVM  \ compile to Flash memory from here on
   :NVM  ( i -- )
     ( i ) coils OVER ( i a i ) BF@
     ( i b ) SWAP mbp1 - ( b i0 )
-    txbuf 3 + SWAP ( b a i0 ) LEBF!
+    rtbuf 3 + SWAP ( b a i0 ) LEBF!
   ;RAM ALIAS FC01ACT
 
   \ FC01 handler
@@ -82,7 +82,7 @@ NVM  \ compile to Flash memory from here on
   :NVM  ( i -- )
     ( i ) inputs OVER ( i a i ) BF@
     ( i b ) SWAP mbp1 - ( b i0 )
-    txbuf 3 + SWAP ( b a i0 ) LEBF!
+    rtbuf 3 + SWAP ( b a i0 ) LEBF!
   ;RAM ALIAS FC02ACT
 
   \ FC02 handler
@@ -145,7 +145,7 @@ NVM  \ compile to Flash memory from here on
 
   \ FC15 Write Multiple Coils write transfer
   :NVM  ( i -- )
-    ( i ) rxbuf 7 + OVER mbp1 - ( i a i0 ) LEBF@ SWAP ( b i )
+    ( i ) rtbuf 7 + OVER mbp1 - ( i a i0 ) LEBF@ SWAP ( b i )
     coils SWAP ( b a i ) BF!
   ;RAM ALIAS FC15ACT
 
@@ -162,7 +162,7 @@ NVM  \ compile to Flash memory from here on
 
   \ MB read PDU RX data using register index
   :NVM  ( i -- n )
-    mbp1 - 2* rxbuf + 7 + @
+    mbp1 - 2* rtbuf + 7 + @
   ;RAM ALIAS mbrxd
 
   \ FC16 holding register write transfer

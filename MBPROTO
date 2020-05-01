@@ -23,8 +23,8 @@ NVM
 
   \ flag MODBUS Exception and set code
   : MBEC ( ec -- )
-    [ 1 txbuf 1+ 7 ]B!
-    ( ec ) txc+
+    [ 1 rtbuf 1+ 7 ]B!  \ flag error in FC field
+    ( ec ) txc+         \ and put EC
   ;
 
   \ default FC handler - raise EC 1 "ILLEGAL FUNCTION"
@@ -48,10 +48,36 @@ NVM
     1- 2* ( [ tab ] ) LITERAL +
   ;
 
+  \ execute xt if not 0
+  : @?EXEC ( xt -- ) @ ?DUP IF
+    ( xt ) EXECUTE
+    THEN
+  ;
+
+  \ get MODBUS FC
+  : mbfc ( -- c )
+    rtbuf 1+ C@
+  ;
+
+  \ 1st MODBUS FC parameter
+  : mbp1 ( -- n )
+    mbp @
+  ;
+
+  \ 2nd MODBUS FC parameter
+  : mbp2 ( -- n )
+    mbp 2+ @
+  ;
+
+  \ MODBUS write response (e.g FC05, FC06, FC15, FC16)
+  : MBWR  ( -- )
+    mbp1 tx+ mbp2 tx+  \ copy 1st and 2nd parameter
+  ;
+
   \ true if n in range mbp1,mbp2, else false and MODBUS EC=2
   : mbrange? ( n -- b )
-    -1 SWAP mbp1 mbp2 + - 0< IF
-      2 MBEC NOT
+    -1 ( b ) SWAP mbp1 mbp2 + - 0< IF
+      2 MBEC ( b ) NOT
     THEN
   ;
 
@@ -78,24 +104,24 @@ NVM
 
   \ MODBUS protocol handler
   : MBPROTO ( -- )
-    rxbuf rxp @ - ( rx )
+    rtbuf rxp @ - ( rx )
     1 TIM tstamp @ - < AND ( message trigger )
     IF
-      rxp @ 2- ( a1 ) DUP rxbuf ( a1 a1 a0 )
+      rxp @ 2- ( a1 ) DUP rtbuf ( a1 a1 a0 )
       MBCRC ( a1 crc-le ) SWAP @ = ( crc OK )
       ( crc-ok ) IF
-        mbnode @ rxbuf C@ = IF  \ node address match
-          rxbuf 2+ 2@ mbp 2!    \ MODBUS parameter
+        mbnode @ rtbuf C@ = IF  \ node address match
+          rtbuf 2+ 2@ ( mbp2 mbp1 ) mbp 2!    \ keep MODBUS parameter
 
           mbpre @?EXEC    \ preparation handler, e.g. read inputs
-          rxbuf    C@     txc+  \ write Node-ID
-          rxbuf 1+ C@ DUP txc+  \ write FC
-          ( fc ) DUP 1 17 WITHIN IF
+          \ rtbuf    C@     txc+  \ write Node-ID
+          \ rtbuf 1+ C@ DUP txc+  \ write FC
+          mbfc ( fc ) DUP 1 17 WITHIN IF
              FC>XT @?EXEC \ get and execute FC handler
           ELSE
             FCDEF         \ default handler
           THEN
-          tbp @ txbuf ( a1 a0 ) MBCRC ( CRC-LE ) tx+
+          tbp @ rtbuf ( a1 a0 ) MBCRC ( CRC-LE ) tx+
           mbact @?EXEC    \ action handler, e.g. write outputs
           send
         THEN
@@ -138,7 +164,7 @@ NVM
   ;NVM ( xt ) 6 FC>XT !   \ register the FC handler
 
   : showfc ( -- )
-    rxbuf C@ ." FC:" . CR
+    rtbuf 1+ C@ ." FC:" . CR
     1 MBEC  \ set error code
   ;
 

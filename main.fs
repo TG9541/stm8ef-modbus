@@ -8,9 +8,9 @@
 \ Example output for 96008N1, Node=1, FC=6, Addr=5, Data=516
 \
 \ Write register: 5= 516
-\  MODBUS rxbuf: 8
+\  MODBUS rtbuf: 8
 \   80   1  6  0  5  2  4 99 68  0  0  0  0  0  0  0  0  _______h________
-\  MODBUS txbuf: 8
+\  MODBUS rtbuf: 8
 \   98   1  6  0  5  2  4 99 68  0  0  0  0  0  0  0  0  _______h________
 
 \ check if the MODBUS protocol core is already present
@@ -35,7 +35,7 @@ NVM
   ;NVM ( xt ) 6 FC>XT !   \ register the FC handler
 
   : showfc ( -- )
-    rxbuf C@ ." FC:" . CR
+    rtbuf 1+ C@ ." FC:" . CR
     1 MBEC  \ set error code
   ;
 
@@ -43,7 +43,8 @@ NVM
     0 UARTISR                     \ init UART handler w/ default baud rate
     1 mbnode !                    \ set node address
     [ ' showfc ] LITERAL mbdef !  \ FC default action (optional feature)
-    [ ' MBDUMP ] LITERAL mbact !  \ show buffers (debug demo)
+    [ ' MBDUMP ] LITERAL mbpre !  \ show receive buffer (debug demo)
+    [ ' TXDUMP ] LITERAL mbact !  \ show transmit buffer
     [ ' MBPROTO ] LITERAL 'IDLE ! \ run MB protocol handler as idle task
   ;
 

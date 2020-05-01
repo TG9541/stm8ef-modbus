@@ -32,7 +32,7 @@ NVM
     ( i ) coils OVER ( i a i ) BF@
     ( i b ) SWAP mbp1 - ( b i0 )
     DUP . CR
-    txbuf 3 + SWAP ( b a i0 ) LEBF!
+    rtbuf 3 + SWAP ( b a i0 ) LEBF!
   ;RAM ALIAS FC01ACT NVM
 
   \ FC01 handler
@@ -48,7 +48,7 @@ NVM
 
   \ custom default action handler
   : showfc ( -- )
-    rxbuf C@ ." FC:" . CR
+    rtbuf 1+ C@ ." FC:" . CR
     1 MBEC  \ set error code
   ;
 
@@ -56,7 +56,8 @@ NVM
     0 UARTISR                     \ init UART handler w/ default baud rate
     1 mbnode !                    \ set node address
     [ ' showfc ] LITERAL mbdef !  \ FC default action (optional feature)
-    [ ' MBDUMP ] LITERAL mbact !  \ show buffers (debug demo)
+    [ ' MBDUMP ] LITERAL mbpre !  \ show receive buffer (debug demo)
+    [ ' TXDUMP ] LITERAL mbact !  \ show transmit buffer
     [ ' MBPROTO ] LITERAL 'IDLE ! \ run MB protocol handler as idle task
     .OK
   ;

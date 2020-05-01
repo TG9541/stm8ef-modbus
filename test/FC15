@@ -32,7 +32,7 @@ NVM
   :NVM  ( i -- )
     \ uncomment "DUP ." lines to check index (this can cause a timeout)
     DUP .
-    ( i ) rxbuf 7 + OVER mbp1 - ( i a i0 )
+    ( i ) rtbuf 7 + OVER mbp1 - ( i a i0 )
     DUP . CR
     LEBF@ SWAP ( b i )
     coils SWAP ( b a i ) BF!
@@ -52,7 +52,7 @@ NVM
 
   \ custom default action handler
   : showfc ( -- )
-    rxbuf C@ ." FC:" . CR
+    rtbuf 1+ C@ ." FC:" . CR
     1 MBEC  \ set error code
   ;
 
@@ -60,7 +60,8 @@ NVM
     0 UARTISR                     \ init UART handler w/ default baud rate
     1 mbnode !                    \ set node address
     [ ' showfc ] LITERAL mbdef !  \ FC default action (optional feature)
-    [ ' MBDUMP ] LITERAL mbact !  \ show buffers (debug demo)
+    [ ' MBDUMP ] LITERAL mbpre !  \ show receive buffer (debug demo)
+    [ ' TXDUMP ] LITERAL mbact !  \ show transmit buffer
     [ ' MBPROTO ] LITERAL 'IDLE ! \ run MB protocol handler as idle task
     .OK
   ;

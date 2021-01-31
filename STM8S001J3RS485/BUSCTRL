@@ -1,0 +1,35 @@
+\ STM8EF-MODBUS bus control for the STM8S001J3RS485 board
+
+\res MCU: STM8S103
+\res export PD_ODR PD_DDR PD_CR1
+\res export UART1_CR2 UART1_CR5 UART1_DR
+
+5 CONSTANT #RIEN
+
+#require ]B!
+#require WIPE
+
+NVM
+  \ Set RS485 Driver to "RX"
+  : BUSrx ( -- )
+    [ 0 PD_ODR 6 ]B!
+    UART1_DR C@ DROP         \ remove any received char
+    [ 0 UART1_CR2 #RIEN ]B!  \ re-enable interrupt
+  ;
+
+  \ Set RS485 Driver to "TX"
+  : BUStx ( -- )
+    [ 0 UART1_CR2 #RIEN ]B!  \ RX/TX is a shared pin - play it safe
+    [ 1 PD_ODR 6 ]B!
+  ;
+
+  \ Initialize GPIO and RS485 Driver
+  : BUSCTRL ( -- )
+    [ 1 UART1_CR5 3 ]B!  \ UART1 Half-Duplex
+    [ 0 PD_DDR 5 ]B!     \ PD5 input mode
+    [ 1 PD_CR1 5 ]B!     \ PD5 UART_TXRX pull-up
+    [ 1 PD_DDR 6 ]B!     \ PD6 !RE/DE output mode
+    [ 1 PD_CR1 6 ]B!     \ PD6 push-pull
+    BUSrx
+  ;
+WIPE RAM

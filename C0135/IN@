@@ -1,7 +1,7 @@
 \ C0135 4-Relay board: read low side inputs - License MIT refer to STM8 eForth
 
 \ This is close to the iron
-\res MCU: STM8S105
+\res MCU: STM8S103
 \res export PC_IDR PC_CR1  PD_IDR PD_CR1
 
 \ copy bit to C flag, set/res bit

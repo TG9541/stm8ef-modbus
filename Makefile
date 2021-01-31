@@ -1,12 +1,13 @@
-STM8EF_BOARD=C0135
-STM8EF_VER=2.2.24.pre3
+STM8EF_VER=2.2.27.pre2
 STM8EF_BIN=stm8ef-bin.zip
 STM8EF_URL=https://github.com/TG9541/stm8ef/releases/download/${STM8EF_VER}/${STM8EF_BIN}
 
-E4THCOM=e4thcom-0.6.3
+E4THCOM=e4thcom
 TERM_PORT=ttyUSB0
 TERM_BAUD=9600
-TERM_FLAGS=
+TERM_FLAGS="-p mcu:target:lib"
+
+# MODBOARD=C0135
 
 ifeq ($(BOARD),)
 
@@ -16,55 +17,61 @@ forth=$(wildcard *fs) $(mmforth)
 
 .PHONY: test clean
 
-# Usage:make term BOARD=<board dir> [TERM_PORT=ttyXXXX] [TERM_BAUD=nnnn] [TERM_FLAGS="--half-duplex --idm"]
-all: load
+all: build
 
-release: zip tgz
+release: buildload zip tgz
 
-zip: simload
+zip:
 	find out/ -name "*.ihx" -print | zip -r out/stm8ef-bin LICENSE.md docs/words.md inc/* mcu/* lib/* -@
 	find out/ -name "simbreak.txt" -print | zip -r out/stm8ef-bin tools/* -@
 	find out/ -name "target" -print | zip -r out/stm8ef-bin -@
 
-tgz: simload
+tgz:
 	( find out/ -path "*target/*" -print0 ; find out/ -name "*.ihx" -type f -print0 ; find out/ -name "simbreak.txt" -type f -print0 ) | tar -czvf out/stm8ef-bin.tgz LICENSE.md docs/words.md mcu lib tools --null -T -
 	( find out/ -name "forth.rst" -type f -print0 ) | tar -czvf out/stm8ef-rst.tgz --null -T -
 
-build: words
-	make BOARD=CORE
+build: depend
+	make BOARD=C0135
+	make BOARD=STM8S001J3RS485
+
+buildload: depend
+	make MODBOARD=C0135 simload
+	make MODBOARD=STM8S001J3RS485 simload
 
 load: flash
-	tools/codeload.py -b out/$(STM8EF_BOARD) -p /dev/$(TERM_PORT) serial $(STM8EF_BOARD)/board.fs
+	tools/codeload.py -b out/$(MODBOARD) -p /dev/$(TERM_PORT) serial $(MODBOARD)/board.fs
 
-flash: target defaults
-	stm8flash -c stlinkv2 -p stm8s103f3 -w out/$(STM8EF_BOARD)/$(STM8EF_BOARD).ihx
+flash: target
+	make BOARD=$(MODBOARD) flash
 
 defaults:
 	stm8flash -c stlinkv2 -p stm8s103f3 -s opt -w tools/stm8s103FactoryDefaults.bin
 
 test: simload
-	test/mbtest.sh $(STM8EF_BOARD)
+	test/mbtest.sh $(MODBOARD)
 
 simload: $(forth) target
-	tools/simload.sh $(STM8EF_BOARD)
+	make BOARD=$(MODBOARD)
+	tools/simload.sh $(MODBOARD)
 	touch simload
 
 target: binary
 	rm -f target
-	ln -s out/${STM8EF_BOARD}/target target
+	ln -s out/${MODBOARD}/target target
 
 binary: depend
-	make BOARD=C0135
+	make BOARD=$(MODBOARD)
 
 depend:
-	if [ ! -d "out" ]; then \
+	if [ ! -d "lib" ]; then \
 		curl -# -L -O ${STM8EF_URL}; \
-		unzip -q -o ${STM8EF_BIN} -x out/*; \
-		unzip -q -o ${STM8EF_BIN} out/${STM8EF_BOARD}/*; \
+		# tar -xz --exclude='out/*' -f ${STM8EF_BIN}; \
+		unzip -q -n ${STM8EF_BIN} -x out/*; \
 		rm ${STM8EF_BIN}; \
 	fi
 	touch depend
 
+# Usage:make term BOARD=<board dir> [TERM_PORT=ttyXXXX] [TERM_BAUD=nnnn] [TERM_FLAGS="--half-duplex --idm"]
 term:
 	$(E4THCOM) -t stm8ef -p .:lib $(TERM_FLAGS) -d $(TERM_PORT) -b B$(TERM_BAUD)
 

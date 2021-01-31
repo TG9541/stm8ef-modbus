@@ -18,7 +18,6 @@
 #require LOCK
 #require ULOCK
 #require 'IDLE
-#require .OK
 
 \ define temporary constants
 $4000  CONSTANT  EE_NODE
@@ -69,7 +68,8 @@ NVM
     EE_BAUD @ ( #BR ) UARTISR
 
     [ ' MBPROTO ( xt ) ] LITERAL 'IDLE !
-    .OK
+
+    ." STM8EF-MODBUS C0135" hi
   ;
 
   \ register initialization

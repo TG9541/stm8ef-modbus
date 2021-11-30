@@ -29,9 +29,11 @@ This project doesn't just provide a better MODBUS RTU firmware for the relay boa
 
 ![image](https://user-images.githubusercontent.com/5466977/80796849-917ae500-8ba0-11ea-843b-96307026f7a8.png)
 
-Using the Forth programming language and the STM8 eForth Background Task it's very program local control features, e.g. a window blinds controller that reacts on local inputs without noticable lag and that communicates with a home-automation controller through "holding" registers.
+Using the [Forth programming language][EForthProgramming] and the [STM8 eForth Background Task][BACKGROUNDTASK] it's easy to program local control features, e.g. a window blinds controller that reacts on local inputs without noticable lag and that communicates with a home-automation controller through "holding" registers. This way robust and safe home-automation is possible.
 
 [TWOWIRE]: https://github.com/TG9541/stm8ef/wiki/STM8-eForth-Programming-Tools#using-a-serial-interface-for-2-wire-communication
+[BACKGROUNDTASK]: https://github.com/TG9541/stm8ef/wiki/STM8-eForth-Background-Task
+[EForthProgramming]: https://github.com/TG9541/stm8ef/wiki/STM8-eForth-Programming
 
 ### STM8S001J3RS485 Mini MODBUS Board
 

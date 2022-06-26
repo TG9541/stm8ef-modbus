@@ -9,6 +9,14 @@ Behind the CLI is a Forth compiler/interpreter that the operating system of the 
 
 The MODBUS RTU implementation covers basic MODBUS FCs, the subset of [MODBUS V1.1b](http://www.modbus.org/docs/Modbus_Application_Protocol_V1_1b.pdf) commonly used for simple I/O nodes. It's easy to strip the MODBUS server down to a smaller set of FCs, or implement different ones. It's also easy implement "local intelligence" which can make, e.g., home automation much more robust, resilient and reactive than what's possible with a central controller and "dumb nodes".
 
+## STM8EF-MODBUS Demo
+
+In the Forth2020 #24 June 2022 User-Group meeting, the author held a talk "A Modular MODBUS Server With STM8 eForth". In the video general ideas about the architecture are explained and an example for interactive feature development and testing is given.   
+
+[![Forth2020 Zoom Meeting 2022 # 24](https://user-images.githubusercontent.com/5466977/175802574-2b507519-3559-4804-ba67-3abe5bd70a3e.png)](https://www.youtube.com/watch?v=noVSeWeVmmw)
+
+Code used in the demo, and further instructions, are in [this GitHub Gist](https://gist.github.com/TG9541/9a1137693abecdc8fcb4cc63b7dd0edb).
+
 ## Supported Boards
 
 ### C0135 4-Relay Board

@@ -1,5 +1,5 @@
-\ Minimal MODBUS server application with a sole FC6 handler
-\ Hint: C0135/board.fs uses MBSERVER as a full featured MODBUS server
+\ Minimal MODBUS server application with an FC6 handler
+\ Hint: MBSERVER implements a full MODBUS server - see C0135/board.fs
 \
 \ Features:
 \ * implements FC06 "Write Single Register"
@@ -53,7 +53,7 @@ NVM
     [ ' MBDUMP ] LITERAL mbpre !  \ demo: dump RXTX buffer after receive
     [ ' TXDUMP ] LITERAL mbact !  \       dump RXTX buffer before transmit
     [ ' MBPROTO ] LITERAL 'IDLE ! \ register MBPROTO as the idle task
-    CR ." STM8EF-MODBUS minimal server FC6 'Write Single Register'"
+    CR ." Demo STM8EF-MODBUS server FC6 'Write Single Register'"
     hi
   ;
 

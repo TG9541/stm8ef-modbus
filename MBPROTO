@@ -35,7 +35,6 @@ NVM
     ELSE
       1 MBEC
     THEN
-    [ HERE ( xt ) ]
   ;
 
   \ make FC-XT Table for FC>XT, initialize with "default FC handler"
@@ -45,7 +44,9 @@ NVM
 
   \ turn FC into XT table address
   : FC>XT ( fc -- a )
-    1- 2* ( [ tab ] ) LITERAL +
+    \ map FC17 to FC24 to FC-XT table index 6..13 (see issue #47)
+    DUP 17 < IF 1- ELSE 11 - THEN
+    2* ( [ tab ] ) LITERAL +
   ;
 
   \ execute xt if not 0
@@ -112,11 +113,8 @@ NVM
       ( crc-ok ) IF
         mbnode @ rtbuf C@ = IF  \ node address match
           rtbuf 2+ 2@ ( mbp2 mbp1 ) mbp 2!    \ keep MODBUS parameter
-
           mbpre @?EXEC    \ preparation handler, e.g. read inputs
-          \ rtbuf    C@     txc+  \ write Node-ID
-          \ rtbuf 1+ C@ DUP txc+  \ write FC
-          mbfc ( fc ) DUP 1 17 WITHIN IF
+          mbfc ( fc ) DUP 1 25 WITHIN IF
              FC>XT @?EXEC \ get and execute FC handler
           ELSE
             FCDEF         \ default handler

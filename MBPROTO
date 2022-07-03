@@ -9,7 +9,7 @@ NVM
   VARIABLE mbnode  \ MODBUS node id
   VARIABLE crcerr  \ CRC error counter
   VARIABLE mbpre   \ xt for FC preparation (e.g. reading inputs)
-  VARIABLE mbact   \ xt for oputput action (e.g. output, debugging)
+  VARIABLE mbact   \ xt for output action (e.g. output, debugging)
   VARIABLE mbdef   \ xt for default handler
   VARIABLE mbp 2 ALLOT  \ MODBUS parameter 1 and 2
 
@@ -160,7 +160,7 @@ NVM
   :NVM  ( -- )
     \ write register address and value to the console
     ." Write register:" mbp1 . ." =" mbp2 . CR
-    MBSWR  \ acknowledge FC06
+    MBWR  \ acknowledge FC06
   ;NVM ( xt ) 6 FC>XT !   \ register the FC handler
 
   : showfc ( -- )

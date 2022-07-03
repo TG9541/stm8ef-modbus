@@ -1,5 +1,5 @@
-STM8EF_VER=2.2.27.pre2
-STM8EF_BIN=stm8ef-bin.zip
+STM8EF_VER=2.2.29-pre1
+STM8EF_BIN=stm8ef-bin.tgz
 STM8EF_URL=https://github.com/TG9541/stm8ef/releases/download/${STM8EF_VER}/${STM8EF_BIN}
 
 E4THCOM=e4thcom
@@ -65,8 +65,8 @@ binary: depend
 depend:
 	if [ ! -d "lib" ]; then \
 		curl -# -L -O ${STM8EF_URL}; \
-		# tar -xz --exclude='out/*' -f ${STM8EF_BIN}; \
-		unzip -q -n ${STM8EF_BIN} -x out/*; \
+		tar -xz --exclude='out/*' -f ${STM8EF_BIN}; \
+		# unzip -q -n ${STM8EF_BIN} -x out/*; \
 		rm ${STM8EF_BIN}; \
 	fi
 	touch depend

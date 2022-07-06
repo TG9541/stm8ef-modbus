@@ -1,18 +1,13 @@
 # stm8ef-modbus
 ![Build](https://github.com/TG9541/stm8ef-modbus/actions/workflows/build.yml/badge.svg)
 
-This repository provides a lightweight MODBUS-RTU implementation based on [STM8 eForth](https://github.com/TG9541/stm8ef/wiki) for, e.g., lab or home automation. It targets low-cost STM8S 8bit µCs like the STM8S003F3P6 with 8K Flash and 1K RAM which drives cheap relay board. With minor adaptations the code can be used for any STM8 µC.
+This repository provides a lightweight MODBUS-RTU implementation based on [STM8 eForth](https://github.com/TG9541/stm8ef/wiki) for, e.g., lab or home automation. It targets low-cost STM8S 8bit µCs like the STM8S003F3P6 with 8K Flash and 1K RAM which powers certain budget relay boards. With minor adaptations the code can be used for any STM8 µC.
 
-Using STM8 Forth for MODBUS has advantages over C or assembler implementations: it's not very just very compact but it also gives applications access to many advanced features like "I/O-logic in the background" or a CLI (command line interface) for interactive testing. It can even take the role of a MODBUS-RTU Client!
+Using STM8 Forth for MODBUS has advantages over C or assembler implementations. It's not just very compact but it also gives applications access to nifty features like "background I/O-logic" or a CLI (command line interface) for interactive testing. For simple applications it can even take the role of a MODBUS-RTU client (or "automation controller").
 
-The CLI is, in fact, a Forth compiler/interpreter that's at the same time the operating system of the MODBUS node. It's even possible to change code while a MODBUS client communicates with the server!
+The CLI is, in fact, a Forth compiler/interpreter that's at the same time the operating system of the MODBUS node. It's even possible to change code while MODBUS communication is active.
 
-The MODBUS RTU implementation covers basic MODBUS FCs, i.e., a subset of [MODBUS V1.1b](http://www.modbus.org/docs/Modbus_Application_Protocol_V1_1b.pdf) commonly used for simple I/O nodes. It's easy to strip the MODBUS server down to a smaller set of FCs, or implement other FCs in a range of FC1 to FC24. It's also easy to implement "local logic" which can make automation much more robust, resilient and reactive than what's possible with a central controller and "dumb nodes".
-
-## Binary Release
-
-This project provides a [binary release](https://github.com/TG9541/stm8ef-modbus/releases). This means that you don't need to use it is a cheap [ST-Link dongle](https://www.aliexpress.com/wholesale?SearchText=stlink) for programming the STM8 chip. The [volatile release](https://github.com/TG9541/stm8ef-modbus/releases/tag/volatile) contains the latest (unstable) development binary.
-
+The MODBUS-RTU implementation covers basic MODBUS FCs, i.e., a subset of [MODBUS V1.1b](http://www.modbus.org/docs/Modbus_Application_Protocol_V1_1b.pdf) commonly used for simple I/O nodes. It's easy to strip the MODBUS server down to a smaller set of FCs, or implement other FCs in a range of FC1 to FC24. It's also easy to implement "local logic" for robust, reactive and resilient automation (i.e., more than what's possible with a central controller and "dumb nodes").
 
 ## STM8EF-MODBUS Demo
 
@@ -21,6 +16,10 @@ In the Forth2020 #24 June 2022 User-Group meeting, the author held a talk "A Mod
 [![Forth2020 Zoom Meeting 2022 # 24](https://user-images.githubusercontent.com/5466977/175802574-2b507519-3559-4804-ba67-3abe5bd70a3e.png)](https://www.youtube.com/watch?v=noVSeWeVmmw)
 
 Code used in the demo, and further instructions, are in [this GitHub Gist](https://gist.github.com/TG9541/9a1137693abecdc8fcb4cc63b7dd0edb).
+
+## Binary Release
+
+This project provides a [binary release](https://github.com/TG9541/stm8ef-modbus/releases). This means that a cheap [ST-Link dongle](https://www.aliexpress.com/wholesale?SearchText=stlink) for programming the STM8 chip is all you need to use it. The [volatile release](https://github.com/TG9541/stm8ef-modbus/releases/tag/volatile) contains the latest (unstable) development binary.
 
 ## Supported Boards
 

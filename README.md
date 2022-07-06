@@ -1,13 +1,18 @@
 # stm8ef-modbus
-[![Travis-CI](https://travis-ci.org/TG9541/stm8ef-modbus.svg)](https://travis-ci.org/TG9541/stm8ef-modbus)
+![Build](https://github.com/TG9541/stm8ef-modbus/actions/workflows/build.yml/badge.svg)
 
-This repository provides a lightweight MODBUS RTU implementation with [STM8 eForth](https://github.com/TG9541/stm8ef/wiki) for "wired" control nodes, e.g. for home automation. The main target is low-cost STM8S 8bit µCs like the STM8S003F3P6 with 8K Flash and 1K RAM but other STM8S µCs can be used, too.
+This repository provides a lightweight MODBUS-RTU implementation based on [STM8 eForth](https://github.com/TG9541/stm8ef/wiki) for, e.g., lab or home automation. It targets low-cost STM8S 8bit µCs like the STM8S003F3P6 with 8K Flash and 1K RAM which drives cheap relay board. With minor adaptations the code can be used for any STM8 µC.
 
-Using STM8 Forth for MODBUS has some advantages over C or assembler implementations: the implementation is very compact and it gives applications access to many advanced architecture features like "I/O-logic execution in the background" or a CLI (command line interface) for interactive testing.
+Using STM8 Forth for MODBUS has advantages over C or assembler implementations: it's not very just very compact but it also gives applications access to many advanced features like "I/O-logic in the background" or a CLI (command line interface) for interactive testing. It can even take the role of a MODBUS-RTU Client!
 
-Behind the CLI is a Forth compiler/interpreter that the operating system of the MODBUS node - it's even possible to change code while the board is communicating with the MODBUS host!
+The CLI is, in fact, a Forth compiler/interpreter that's at the same time the operating system of the MODBUS node. It's even possible to change code while a MODBUS client communicates with the server!
 
-The MODBUS RTU implementation covers basic MODBUS FCs, the subset of [MODBUS V1.1b](http://www.modbus.org/docs/Modbus_Application_Protocol_V1_1b.pdf) commonly used for simple I/O nodes. It's easy to strip the MODBUS server down to a smaller set of FCs, or implement different ones. It's also easy implement "local intelligence" which can make, e.g., home automation much more robust, resilient and reactive than what's possible with a central controller and "dumb nodes".
+The MODBUS RTU implementation covers basic MODBUS FCs, i.e., a subset of [MODBUS V1.1b](http://www.modbus.org/docs/Modbus_Application_Protocol_V1_1b.pdf) commonly used for simple I/O nodes. It's easy to strip the MODBUS server down to a smaller set of FCs, or implement other FCs in a range of FC1 to FC24. It's also easy to implement "local logic" which can make automation much more robust, resilient and reactive than what's possible with a central controller and "dumb nodes".
+
+## Binary Release
+
+This project provides a [binary release](https://github.com/TG9541/stm8ef-modbus/releases). This means that you don't need to use it is a cheap [ST-Link dongle](https://www.aliexpress.com/wholesale?SearchText=stlink) for programming the STM8 chip. The [volatile release](https://github.com/TG9541/stm8ef-modbus/releases/tag/volatile) contains the latest (unstable) development binary.
+
 
 ## STM8EF-MODBUS Demo
 
@@ -73,7 +78,9 @@ FC | Description | Support
 **15** | **Write Multiple Coils** | implemented
 **16** | **Write Multiple Registers** | implemented
 
-A working example with Node-ID and Baud Rate stored in EEPROM is implemented in `C0135/board.fs`. An example that shows how to develop minimal servers with FC handlers from scratch using the Forth console is in `main.fs` and, for different FCs, in the folder [test](https://github.com/TG9541/stm8ef-modbus/tree/master/test).
+Other FCs can be added (e.g., FC22 .. FC24).
+
+A ready-to-use implementation for the C0135 relay board is implemented in `C0135/board.fs`. An example that shows how to develop minimal servers with FC handlers from scratch using the Forth console is in `main.fs` and, for different FCs, in the folder [test](https://github.com/TG9541/stm8ef-modbus/tree/master/test).
 
 Note that there is an experimental mapping of holding registers: holding register addresses from 60000 are mapped to the EEPROM. The mapping can be changed in the future. Community input on how to deal with MODBUS style register mapping is welcome.
 
@@ -89,13 +96,11 @@ MB address|register MODBUS|Forth
 
 ## Installation
 
-This project uses the STM8 eForth "Modular Build" feature: `make depend` fetches the STM8 eForth release defined in the `Makefile`.
+You can either use the binary release or build your own binary. This project uses the STM8 eForth "Modular Build" feature: `make depend` fetches the STM8 eForth release defined in the `Makefile`.
 
-On a Linux system common dependencies are e.g. GAWK, MAKE and Python. SDCC needs to be installed. It's also possible to use `tg9541/docker-sdcc` in a Docker container (refer to `.travis.yml` for details).
+On a Linux system common dependencies are e.g. GAWK, MAKE and Python. SDCC needs to be installed. It's also possible to use `tg9541/docker-sdcc` in a Docker container (see details in the GitHub [build workflow](https://github.com/TG9541/stm8ef-modbus/blob/master/.github/workflows/build.yml) or refer to the [Installation Instructions](https://github.com/TG9541/stm8ef-modbus/wiki/HowTo#installation) in the STM8EF-MODBUS Wiki).
 
 The [Getting Started](https://github.com/TG9541/stm8ef/wiki/Breakout-Boards#getting-started) section in the STM8 eForth Wiki provides an introduction to flashing STM8 eForth to a target µC.
-
-Please refer to the [Installation Instructions](https://github.com/TG9541/stm8ef-modbus/wiki/HowTo#installation) in the STM8EF-MODBUS Wiki for build instructions.
 
 ## Console
 

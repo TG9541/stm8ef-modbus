@@ -7,6 +7,8 @@ TERM_PORT=ttyUSB0
 TERM_BAUD=9600
 TERM_FLAGS="-p mcu:target:lib"
 
+BOARDS = C0135 STM8S001J3RS485
+
 # MODBOARD=C0135
 
 ifeq ($(BOARD),)
@@ -27,16 +29,23 @@ zip:
 	find out/ -name "target" -print | zip -r out/stm8ef-bin -@
 
 tgz:
-	( find out/ -path "*target/*" -print0 ; find out/ -name "*.ihx" -type f -print0 ; find out/ -name "simbreak.txt" -type f -print0 ) | tar -czvf out/stm8ef-bin.tgz LICENSE.md docs/words.md mcu lib tools --null -T -
-	( find out/ -name "forth.rst" -type f -print0 ) | tar -czvf out/stm8ef-rst.tgz --null -T -
+	( find . -maxdepth 1 -type f \( -iname "*" ! -iname ".*" \) -print0 | cut -z -c 3- ;\
+		find out/ -path "*target/*" -print0 ;\
+		find out/ -name "*.ihx" -type f -print0 ;\
+		find out/ -name "simbreak.txt" -type f -print0 )\
+		| tar -czvf out/stm8ef-bin.tgz $(BOARDS) inc mcu lib tools docs --null -T -
+	( find out/ -name "forth.rst" -type f -print0 )\
+		| tar -czvf out/stm8ef-rst.tgz --null -T -
 
 build: depend
-	make BOARD=C0135
-	make BOARD=STM8S001J3RS485
+	for trgt in $(BOARDS); do \
+		make BOARD=$$trgt; \
+	done
 
 buildload: depend
-	make MODBOARD=C0135 simload
-	make MODBOARD=STM8S001J3RS485 simload
+	for trgt in $(BOARDS); do \
+		make BOARD=$$trgt simload ; \
+	done
 
 load: flash
 	tools/codeload.py -b out/$(MODBOARD) -p /dev/$(TERM_PORT) serial $(MODBOARD)/board.fs
@@ -66,10 +75,9 @@ depend:
 	if [ ! -d "lib" ]; then \
 		curl -# -L -O ${STM8EF_URL}; \
 		tar -xz --exclude='out/*' -f ${STM8EF_BIN}; \
-		# unzip -q -n ${STM8EF_BIN} -x out/*; \
+		mv LICENSE.md docs/stm8ef_LICENSE.md; \
 		rm ${STM8EF_BIN}; \
 	fi
-	touch depend
 
 # Usage:make term BOARD=<board dir> [TERM_PORT=ttyXXXX] [TERM_BAUD=nnnn] [TERM_FLAGS="--half-duplex --idm"]
 term:
@@ -78,7 +86,7 @@ term:
 clean:
 	rm -rf target docs lib mcu out inc tools
 	rm -f forth.asm forth.h forth.mk main.c STM8S103.efr STM8S105.efr
-	rm -f simload depend
+	rm -f simload
 
 else
 # the STM8 eForth make is a dependency

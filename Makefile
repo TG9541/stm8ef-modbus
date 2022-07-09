@@ -44,7 +44,7 @@ build: depend
 
 buildload: depend
 	for trgt in $(BOARDS); do \
-		make BOARD=$$trgt simload ; \
+		make MODBOARD=$$trgt simload ; \
 	done
 
 load: flash

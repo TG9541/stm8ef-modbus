@@ -1,0 +1,58 @@
+\ STM8EF-MODBUS Base words for server and client
+
+#require UARTISR
+#require CRC16
+
+NVM
+  VARIABLE mbp 2 ALLOT  \ MODBUS parameter 1 and 2
+
+  \ 1st MODBUS FC parameter
+  : mbp1 ( -- n )
+    mbp @
+  ;
+
+  \ 2nd MODBUS FC parameter
+  : mbp2 ( -- n )
+    mbp 2+ @
+  ;
+
+  \ MODBUS write response (e.g FC05, FC06, FC15, FC16)
+  : MBWR  ( -- )
+    mbp1 tx+ mbp2 tx+  \ copy 1st and 2nd parameter
+  ;
+
+  \ MB loop (xt) from mbp1 to mbp1+mbp2
+  : mbloop ( xt -- )
+    mbp1 mbp2 OVER + SWAP  DO
+      ( xt ) I OVER EXECUTE
+    LOOP
+    ( xt ) DROP
+  ;
+
+  \ MB looped bit read with action xt, build response (FC01, FC02, FC03, FC04)
+  : mbread ( xt bpu -- )
+    ( xt bpu ) DUP mbp2 * ( bpu bits )
+    \ N* as quantity of bits / 8, if the remainder is different of 0 => N=N+1
+    ( bits ) 1- 8 / 1+ ( N* ) DUP txc+
+    ( bpu N* ) SWAP ( bpu ) 1 = IF
+       ( N* ) 1- FOR 0 txc+ NEXT  \ init bytes in response with 0
+    ELSE
+       ( N* ) DROP  \ not a bitfield, no memory init
+    THEN
+    ( xt ) mbloop
+  ;
+
+  \ execute xt if not 0
+  : @?EXEC ( a -- ) @ ?DUP IF
+    ( xt ) EXECUTE
+    THEN
+  ;
+
+  \ calc CRC16 from buffer a0 to a1
+  : MBCRC ( a1 a0 -- crc-le )
+    -1 ROT ROT ( -1 a1 a0 ) DO
+      I C@ CRC16
+    LOOP
+    ( CRC16 ) EXG ( CRC-LE )
+  ;
+RAM

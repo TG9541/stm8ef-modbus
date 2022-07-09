@@ -6,6 +6,9 @@
 \ - : means "compile", [ switches to "interpret", ] back and ; "end compile"
 \ - #require, \res, etc are e4thcom or codeload.py keywords
 
+\ load bus access control words for board C0135
+#include C0135/BUSCTRL
+
 \ compile MODBUS server and protocol words
 #require MBSERVER
 

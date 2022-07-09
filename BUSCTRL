@@ -1,24 +1,10 @@
-\ STM8 eForth bus control stubs for RS485 - MODBUS
+\ STM8 eForth bus deferred control stubs for RS485 - MODBUS
+\ Optional - a board config can load its own BUSCTRL before loading UARTISR
 
-\res MCU: STM8S103
-\res export PB_ODR PB_DDR
-
-#require ]B!
+#require DEFER
 
 NVM
-  \ Set RS485 Driver to "RX"
-  : BUSrx ( -- )
-    [ 0 PB_ODR 5 ]B!
-  ;
-
-  \ Set RS485 Driver to "TX"
-  : BUStx ( -- )
-    [ 1 PB_ODR 5 ]B!
-  ;
-
-  \ Initialize GPIO and RS485 Driver
-  : BUSCTRL ( -- )
-    BUSrx
-    [ 1 PB_DDR 5 ]B!
-  ;
+  DEFER BUSrx    \ Set RS485 Driver to "RX"
+  DEFER BUStx    \ Set RS485 Driver to "TX"
+  DEFER BUSCTRL  \ Initialize GPIO and RS485 Driver
 RAM

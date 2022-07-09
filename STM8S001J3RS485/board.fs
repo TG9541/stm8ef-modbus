@@ -78,7 +78,7 @@ NVM
     \ register protocol handler
     [ ' MBPROTO ( xt ) ] LITERAL 'IDLE !
 
-    CR ." STM8EF-MODBUS STM8S001J3RS485" .OK
+    ." STM8EF-MODBUS STM8S001J3RS485" hi
   ;
 
   \ register initialization

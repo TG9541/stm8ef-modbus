@@ -1,9 +1,7 @@
 \ STM8 eForth MODBUS protocol handler - intended to run as an IDLE task
 
-#require UARTISR
-#require CRC16
+#require MBBASE
 #require ]B!
-#require WIPE
 
 NVM
   VARIABLE mbnode  \ MODBUS node id
@@ -11,20 +9,18 @@ NVM
   VARIABLE mbpre   \ xt for FC preparation (e.g. reading inputs)
   VARIABLE mbact   \ xt for output action (e.g. output, debugging)
   VARIABLE mbdef   \ xt for default handler
-  VARIABLE mbp 2 ALLOT  \ MODBUS parameter 1 and 2
-
-  \ calc CRC16 from buffer a0 to a1
-  : MBCRC ( a1 a0 -- crc-le )
-    -1 ROT ROT ( -1 a1 a0 ) DO
-      I C@ CRC16
-    LOOP
-    ( CRC16 ) EXG ( CRC-LE )
-  ;
 
   \ flag MODBUS Exception and set code
   : MBEC ( ec -- )
     [ 1 rtbuf 1+ 7 ]B!  \ flag error in FC field
     ( ec ) txc+         \ and put EC
+  ;
+
+  \ true if n in range mbp1,mbp2, else false and MODBUS EC=2
+  : mbrange? ( n -- b )
+    -1 ( b ) SWAP mbp1 mbp2 + - 0< IF
+      2 MBEC ( b ) NOT
+    THEN
   ;
 
   \ default FC handler - raise EC 1 "ILLEGAL FUNCTION"
@@ -49,58 +45,9 @@ NVM
     2* ( [ tab ] ) LITERAL +
   ;
 
-  \ execute xt if not 0
-  : @?EXEC ( xt -- ) @ ?DUP IF
-    ( xt ) EXECUTE
-    THEN
-  ;
-
   \ get MODBUS FC
   : mbfc ( -- c )
     rtbuf 1+ C@
-  ;
-
-  \ 1st MODBUS FC parameter
-  : mbp1 ( -- n )
-    mbp @
-  ;
-
-  \ 2nd MODBUS FC parameter
-  : mbp2 ( -- n )
-    mbp 2+ @
-  ;
-
-  \ MODBUS write response (e.g FC05, FC06, FC15, FC16)
-  : MBWR  ( -- )
-    mbp1 tx+ mbp2 tx+  \ copy 1st and 2nd parameter
-  ;
-
-  \ true if n in range mbp1,mbp2, else false and MODBUS EC=2
-  : mbrange? ( n -- b )
-    -1 ( b ) SWAP mbp1 mbp2 + - 0< IF
-      2 MBEC ( b ) NOT
-    THEN
-  ;
-
-  \ MB loop (xt) from mbp1 to mbp1+mbp2
-  : mbloop ( xt -- )
-    mbp1 mbp2 OVER + SWAP  DO
-      ( xt ) I OVER EXECUTE
-    LOOP
-    ( xt ) DROP
-  ;
-
-  \ MB looped bit read with action xt, build response (FC01, FC02, FC03, FC04)
-  : mbread ( xt bpu -- )
-    ( xt bpu ) DUP mbp2 * ( bpu bits )
-    \ N* as quantity of bits / 8, if the remainder is different of 0 => N=N+1
-    ( bits ) 1- 8 / 1+ ( N* ) DUP txc+
-    ( bpu N* ) SWAP ( bpu ) 1 = IF
-       ( N* ) 1- FOR 0 txc+ NEXT  \ init bytes in response with 0
-    ELSE
-       ( N* ) DROP  \ not a bitfield, no memory init
-    THEN
-    ( xt ) mbloop
   ;
 
   \ MODBUS protocol handler

@@ -1,0 +1,63 @@
+\ STM8 eForth MODBUS basic client routines
+
+#require MBUTILS
+
+NVM
+  VARIABLE clrec   \ XT for client receive handler
+  VARIABLE clerr   \ XT for client error handler
+  VARIABLE clnfc   \ requested MODBUS Node ID and FC
+  VARIABLE crcerr  \ CRC error counter
+
+  \ MODBUS protocol handler
+  : CLPROTO ( -- )
+    rtbuf rxp @ - ( rx )        \ data has been received
+    1 TIM tstamp @ - < ( gap )  \ gap signals message complete
+    ( rx gap ) AND IF 
+      rxp @ 2- ( a1 ) DUP rtbuf ( a1 a1 a0 )
+      MBCRC ( a1 crc-le ) SWAP @ = ( crc-OK ) IF
+        rtbuf @ clnfc @ = IF    \ node address abd FC match
+           clrec @?EXEC
+        ELSE
+           clerr @?EXEC
+        THEN
+      ELSE
+        1 crcerr +!
+      THEN
+      rxres
+    THEN
+  ;
+
+RAM
+
+\ Example
+
+\ Minimal MODBUS client with a FC06 "Write Single Register" handler
+
+#require CLPROTO
+
+RAM
+#require WIPE
+
+#require 'IDLE
+
+NVM
+#require MBDUMP
+  : tst ( -- )
+    txres
+    1 256 *  ( node )  3 ( fc ) +
+    DUP rtbuf ! clnfc ! 
+    
+    $EA60 tx+  $0005 tx+
+
+    tbp @ rtbuf ( a1 a0 ) MBCRC ( CRC-LE ) tx+
+    send
+  ;
+
+  : init ( -- )
+    0 UARTISR                     \ init UART handler w/ default baud rate
+    [ ' MBDUMP ] LITERAL clrec !  \ MB Client receive action
+    [ ' CLPROTO ] LITERAL 'IDLE ! \ run MB Client protocol handler as idle task
+  ;
+
+  ' init 'BOOT !
+WIPE RAM

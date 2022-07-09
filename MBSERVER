@@ -25,10 +25,11 @@ WIPE
 1024  CONSTANT EECELLS   \ this is the maximum for any STM8 device
 $4000 CONSTANT EESTART
 
-NVM  \ compile to Flash memory from here on
+\ Words for setting and resetting bits, big- and little-endien
 #require BF!
-#require BF@
 
+NVM  \ compile to Flash memory from here on
+#require BF@
   VARIABLE coils   COILCELLS    1- 2* ALLOT
   VARIABLE inputs  INPUTCELLS   1- 2* ALLOT
   VARIABLE holding HOLDINGCELLS 1- 2* ALLOT
